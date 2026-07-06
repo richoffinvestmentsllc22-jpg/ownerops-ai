@@ -64,11 +64,13 @@ export type Lead = {
 export type Opportunity = {
   id: string;
   title: string;
-  stage: "lead" | "estimate" | "proposal" | "negotiation" | "won" | "lost";
+  stage: "lead" | "estimate" | "proposal" | "negotiation" | "won" | "scheduled" | "in_progress" | "completed" | "lost";
   value: number;
   closeDate: string;
   probability: number;
   notes: string;
+  sourceLeadId?: string;
+  customerId?: string;
 };
 
 export type Task = {

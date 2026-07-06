@@ -2,10 +2,12 @@
 
 import { Lightbulb, PhoneCall, Send, Target } from "lucide-react";
 import type { OwnerOpsData } from "@/lib/types";
+import { stageInfo } from "@/lib/workflow";
 
 export function OwnerCoach({ data }: { data: OwnerOpsData }) {
   const overdueTasks = data.tasks.filter((task) => task.status === "todo" && task.dueDate && task.dueDate <= new Date().toISOString().slice(0, 10));
   const proposal = data.opportunities.find((opp) => opp.stage === "proposal" || opp.stage === "negotiation");
+  const activeJob = data.opportunities.find((opp) => opp.stage === "scheduled" || opp.stage === "in_progress");
   const newLead = data.leads.find((lead) => lead.status === "new");
   const actions = [
     {
@@ -14,7 +16,11 @@ export function OwnerCoach({ data }: { data: OwnerOpsData }) {
     },
     {
       icon: Send,
-      text: proposal ? `Follow up on ${proposal.title}; it is worth $${proposal.value.toLocaleString()}.` : "Move one estimate into proposal with a clear next step."
+      text: activeJob
+        ? `Move ${activeJob.title} forward from ${stageInfo(activeJob.stage).label}.`
+        : proposal
+          ? `Follow up on ${proposal.title}; it is worth $${proposal.value.toLocaleString()}.`
+          : "Move one estimate into proposal with a clear next step."
     },
     {
       icon: Target,

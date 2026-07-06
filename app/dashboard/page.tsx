@@ -7,11 +7,13 @@ import { PageFrame } from "@/components/PageFrame";
 import { SectionHeader } from "@/components/SectionHeader";
 import { StatCard } from "@/components/StatCard";
 import { useOwnerOps } from "@/components/DataProvider";
+import { stageInfo } from "@/lib/workflow";
 
 function DashboardContent() {
   const { data } = useOwnerOps();
   const today = new Date().toISOString().slice(0, 10);
-  const openOpportunities = data.opportunities.filter((opp) => !["won", "lost"].includes(opp.stage));
+  const openOpportunities = data.opportunities.filter((opp) => !["completed", "lost"].includes(opp.stage));
+  const activeJobs = data.opportunities.filter((opp) => ["scheduled", "in_progress"].includes(opp.stage)).length;
   const followUpsDue = data.leads.filter((lead) => lead.nextFollowUp && lead.nextFollowUp <= today).length;
   const tasksDue = data.tasks.filter((task) => task.status === "todo" && task.dueDate && task.dueDate <= today).length;
   const estimatedRevenue = openOpportunities.reduce((sum, opp) => sum + opp.value * (opp.probability / 100), 0);
@@ -25,7 +27,7 @@ function DashboardContent() {
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard label="Leads" value={String(data.leads.length)} detail="Total active lead records" icon={UserRoundPlus} />
-        <StatCard label="Open Deals" value={String(openOpportunities.length)} detail="Pipeline not won or lost" icon={BriefcaseBusiness} />
+        <StatCard label="Open Work" value={String(openOpportunities.length)} detail={`${activeJobs} scheduled or in progress`} icon={BriefcaseBusiness} />
         <StatCard label="Follow-ups" value={String(followUpsDue)} detail="Lead follow-ups due" icon={CalendarClock} />
         <StatCard label="Est. Revenue" value={`$${Math.round(estimatedRevenue).toLocaleString()}`} detail="Weighted open pipeline" icon={BadgeDollarSign} />
         <StatCard label="Tasks Due" value={String(tasksDue)} detail="Open tasks due now" icon={ClipboardList} />
@@ -50,7 +52,7 @@ function DashboardContent() {
                   <div className="h-full bg-moss" style={{ width: `${opp.probability}%` }} />
                 </div>
                 <p className="mt-2 text-xs uppercase tracking-[0.08em] text-ink/55">
-                  {opp.stage} · {opp.probability}% confidence
+                  {stageInfo(opp.stage).label} · {opp.probability}% confidence
                 </p>
               </div>
             ))}

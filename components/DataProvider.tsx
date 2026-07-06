@@ -83,6 +83,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
+    applyingExternalUpdate.current = true;
     setData(loadOwnerOpsData());
     setStorageReady(true);
   }, []);

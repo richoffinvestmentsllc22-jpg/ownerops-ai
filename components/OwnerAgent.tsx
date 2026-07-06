@@ -4,6 +4,7 @@ import { Bot, CheckCircle2, ClipboardList, HelpCircle, Lightbulb, Send, Sparkles
 import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { industries } from "@/lib/industry-packs";
+import { stageInfo } from "@/lib/workflow";
 import type { OwnerOpsData } from "@/lib/types";
 
 function money(value: number) {
@@ -12,7 +13,7 @@ function money(value: number) {
 
 function buildAgentAnswer(question: string, data: OwnerOpsData) {
   const prompt = question.toLowerCase();
-  const openDeals = data.opportunities.filter((opp) => !["won", "lost"].includes(opp.stage));
+  const openDeals = data.opportunities.filter((opp) => !["completed", "lost"].includes(opp.stage));
   const hotLead = data.leads.find((lead) => lead.status === "new") ?? data.leads[0];
   const nextTask = data.tasks.find((task) => task.status === "todo") ?? data.tasks[0];
   const pipelineValue = openDeals.reduce((sum, opp) => sum + opp.value, 0);
@@ -49,7 +50,7 @@ export function OwnerAgent({ data }: { data: OwnerOpsData }) {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const activeIndustry = industries[data.profile.industry];
-  const openDeals = data.opportunities.filter((opp) => !["won", "lost"].includes(opp.stage));
+  const openDeals = data.opportunities.filter((opp) => !["completed", "lost"].includes(opp.stage));
   const today = new Date().toISOString().slice(0, 10);
   const dueTasks = data.tasks.filter((task) => task.status === "todo" && task.dueDate && task.dueDate <= today);
   const setupScore = [
@@ -69,13 +70,13 @@ export function OwnerAgent({ data }: { data: OwnerOpsData }) {
       },
       {
         title: "Move one lead forward",
-        detail: data.leads[0] ? `${data.leads[0].name} is marked ${data.leads[0].status}. Add notes and a follow-up date.` : "Add a lead so the dashboard can coach follow-up.",
+        detail: data.leads[0] ? `${data.leads[0].name} is marked ${data.leads[0].status}. Move qualified leads into Pipeline when they become real.` : "Add a lead so the dashboard can coach follow-up.",
         href: "/leads"
       },
       {
-        title: "Protect the quote",
-        detail: "Use the contractor estimator when pricing work with labor, materials, overhead, risk, and profit.",
-        href: "/estimator"
+        title: "Move the workflow",
+        detail: openDeals[0] ? `${openDeals[0].title} is in ${stageInfo(openDeals[0].stage).label}. Use Pipeline to move it to the next phase.` : "Use Pipeline to move real work from estimate through completion.",
+        href: "/opportunities"
       },
       {
         title: "Clear today's work",
@@ -83,7 +84,7 @@ export function OwnerAgent({ data }: { data: OwnerOpsData }) {
         href: "/tasks"
       }
     ],
-    [activeIndustry.label, data.leads, data.profile.businessName, dueTasks.length]
+    [activeIndustry.label, data.leads, data.profile.businessName, dueTasks.length, openDeals]
   );
 
   function askAgent(event: FormEvent<HTMLFormElement>) {
