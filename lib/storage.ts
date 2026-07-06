@@ -24,11 +24,11 @@ function mergeById<T extends { id: string }>(current: T[] | undefined, seeds: T[
   return [...rows, ...seeds.filter((row) => !existingIds.has(row.id))];
 }
 
-function hydrateOwnerOpsData(data: OwnerOpsData): OwnerOpsData {
+export function hydrateOwnerOpsData(data: Partial<OwnerOpsData>): OwnerOpsData {
   return {
     ...demoData,
     ...data,
-    profile: { ...demoData.profile, ...data.profile },
+    profile: { ...demoData.profile, ...(data.profile ?? {}) },
     customers: data.customers ?? demoData.customers,
     leads: data.leads ?? demoData.leads,
     opportunities: data.opportunities ?? demoData.opportunities,

@@ -1,21 +1,24 @@
 "use client";
 
-import { CheckCircle2, Cloud, Database, Mail, ShieldCheck, XCircle } from "lucide-react";
+import { CheckCircle2, Cloud, Database, LogOut, Mail, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { PageFrame } from "@/components/PageFrame";
 import { SectionHeader } from "@/components/SectionHeader";
+import { useOwnerOps } from "@/components/DataProvider";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 const setupSteps = [
-  "Create a Supabase project",
-  "Run supabase/schema.sql in the SQL editor",
-  "Add NEXT_PUBLIC_SUPABASE_URL in Vercel",
-  "Add NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel",
-  "Redeploy the app"
+  "Supabase project connected",
+  "Cloud snapshot table secured with owner-only access",
+  "Vercel production settings added",
+  "Magic-link and email-code login enabled",
+  "Production app redeployed"
 ];
 
 function AccountContent() {
+  const { session, cloudStatus, syncNow, signOut } = useOwnerOps();
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
   const [message, setMessage] = useState("");
 
   async function sendMagicLink(event: FormEvent<HTMLFormElement>) {
@@ -28,10 +31,28 @@ function AccountContent() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: window.location.origin
+        emailRedirectTo: `${window.location.origin}/account`
       }
     });
     setMessage(error ? error.message : "Check your email for the login link.");
+  }
+
+  async function verifyEmailCode() {
+    setMessage("");
+    if (!supabase) {
+      setMessage("Database login is not connected yet. Add the Supabase environment variables in Vercel first.");
+      return;
+    }
+    if (!email || !otp) {
+      setMessage("Enter your email and the code from the Supabase email.");
+      return;
+    }
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: "email"
+    });
+    setMessage(error ? error.message : "Signed in. Your workspace will sync to the cloud.");
   }
 
   return (
@@ -52,24 +73,47 @@ function AccountContent() {
               <p className="label">Storage Mode</p>
               <h2 className="font-black">{isSupabaseConfigured ? "Cloud login is configured" : "Demo browser storage"}</h2>
               <p className="mt-2 text-sm leading-6 text-ink/65">
-                {isSupabaseConfigured
-                  ? "Users can request a magic link. The next step is wiring each table to Supabase reads and writes."
+                {session
+                  ? `Signed in as ${session.user.email}. ${cloudStatus}`
+                  : isSupabaseConfigured
+                    ? `${cloudStatus} Enter your email to receive a magic login link.`
                   : "Data is saved in this browser only. It is good for testing, but not enough for real customers across devices."}
               </p>
             </div>
           </div>
 
-          <form onSubmit={sendMagicLink} className="mt-5 space-y-3">
-            <label>
-              <span className="label mb-1 block">Email</span>
-              <input className="field" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="owner@example.com" />
-            </label>
-            <button type="submit" className="inline-flex items-center gap-2 rounded-md bg-ink px-3 py-2 text-sm font-bold text-white">
-              <Mail size={16} />
-              Send login link
-            </button>
-            {message ? <p className="text-sm leading-6 text-ink/70">{message}</p> : null}
-          </form>
+          {session ? (
+            <div className="mt-5 flex flex-wrap gap-2">
+              <button type="button" onClick={syncNow} className="inline-flex items-center gap-2 rounded-md bg-ink px-3 py-2 text-sm font-bold text-white">
+                <RefreshCw size={16} />
+                Sync now
+              </button>
+              <button type="button" onClick={signOut} className="inline-flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm font-bold">
+                <LogOut size={16} />
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={sendMagicLink} className="mt-5 space-y-3">
+              <label>
+                <span className="label mb-1 block">Email</span>
+                <input className="field" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="owner@example.com" />
+              </label>
+              <button type="submit" className="inline-flex items-center gap-2 rounded-md bg-ink px-3 py-2 text-sm font-bold text-white">
+                <Mail size={16} />
+                Send login link
+              </button>
+              <label>
+                <span className="label mb-1 block">Email code</span>
+                <input className="field" inputMode="numeric" value={otp} onChange={(event) => setOtp(event.target.value)} placeholder="123456" />
+              </label>
+              <button type="button" onClick={verifyEmailCode} className="inline-flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm font-bold">
+                <CheckCircle2 size={16} />
+                Verify code
+              </button>
+              {message ? <p className="text-sm leading-6 text-ink/70">{message}</p> : null}
+            </form>
+          )}
         </section>
 
         <section className="panel p-4">
@@ -102,7 +146,7 @@ function AccountContent() {
         <section className="panel p-4">
           <Database size={20} />
           <h2 className="mt-3 font-black">Next Build Step</h2>
-          <p className="mt-2 text-sm leading-6 text-ink/65">After Supabase keys are added, replace local storage with table reads/writes and add file storage for shareable photo links.</p>
+          <p className="mt-2 text-sm leading-6 text-ink/65">Next, add paid plans, a custom domain, and public proof-gallery links for clients who want branded before-and-after pages.</p>
         </section>
       </div>
     </>

@@ -43,6 +43,7 @@ create table public.business_profiles (
   business_name text not null,
   owner_name text not null,
   industry public.ownerops_industry not null,
+  language text not null default 'en',
   city text,
   state text,
   phone text,
@@ -142,6 +143,12 @@ create table public.ai_prompt_templates (
   created_at timestamptz not null default now()
 );
 
+create table public.ownerops_data_snapshots (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  data jsonb not null,
+  updated_at timestamptz not null default now()
+);
+
 alter table public.business_profiles enable row level security;
 alter table public.customers enable row level security;
 alter table public.leads enable row level security;
@@ -150,6 +157,7 @@ alter table public.tasks enable row level security;
 alter table public.service_pricing enable row level security;
 alter table public.outreach_templates enable row level security;
 alter table public.ai_prompt_templates enable row level security;
+alter table public.ownerops_data_snapshots enable row level security;
 
 create policy "Users manage own profiles" on public.business_profiles
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
@@ -166,4 +174,6 @@ create policy "Users manage own pricing" on public.service_pricing
 create policy "Users manage own outreach" on public.outreach_templates
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "Users manage own prompts" on public.ai_prompt_templates
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own data snapshots" on public.ownerops_data_snapshots
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
