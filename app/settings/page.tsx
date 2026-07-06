@@ -1,7 +1,7 @@
 "use client";
 
 import { RotateCcw, Save } from "lucide-react";
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
 import { PageFrame } from "@/components/PageFrame";
 import { SectionHeader } from "@/components/SectionHeader";
 import { useOwnerOps } from "@/components/DataProvider";
@@ -10,9 +10,11 @@ import { demoData } from "@/lib/demo-data";
 import type { BusinessProfile, IndustryKey } from "@/lib/types";
 
 function SettingsContent() {
-  const { data, setData } = useOwnerOps();
+  const { data, setData, syncNow } = useOwnerOps();
+  const [saveMessage, setSaveMessage] = useState("Changes save in this browser automatically.");
 
   function updateProfile(key: keyof BusinessProfile, value: string) {
+    setSaveMessage("Unsaved cloud changes. Browser copy is updating...");
     setData((current) => ({
       ...current,
       profile: {
@@ -22,8 +24,10 @@ function SettingsContent() {
     }));
   }
 
-  function save(event: FormEvent<HTMLFormElement>) {
+  async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    await syncNow();
+    setSaveMessage("Saved. Company info is stored in this browser and synced to cloud when signed in.");
   }
 
   return (
@@ -84,16 +88,20 @@ function SettingsContent() {
         <div className="flex flex-wrap gap-2 sm:col-span-2">
           <button type="submit" className="inline-flex items-center gap-2 rounded-md bg-moss px-3 py-2 text-sm font-bold text-white">
             <Save size={16} />
-            Saved
+            Save changes
           </button>
           <button
             type="button"
-            onClick={() => setData(demoData)}
+            onClick={() => {
+              setData(demoData);
+              setSaveMessage("Demo data restored.");
+            }}
             className="inline-flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm font-bold"
           >
             <RotateCcw size={16} />
             Reset demo data
           </button>
+          <p className="basis-full text-sm leading-6 text-ink/65">{saveMessage}</p>
         </div>
       </form>
       <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
