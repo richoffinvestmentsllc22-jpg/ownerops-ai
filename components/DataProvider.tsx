@@ -4,6 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { hydrateOwnerOpsData, loadOwnerOpsData, saveOwnerOpsData } from "@/lib/storage";
+import { demoData } from "@/lib/demo-data";
 import type { OwnerOpsData } from "@/lib/types";
 
 type DataContextValue = {
@@ -18,9 +19,10 @@ type DataContextValue = {
 const DataContext = createContext<DataContextValue | null>(null);
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
-  const [data, setData] = useState<OwnerOpsData>(() => loadOwnerOpsData());
+  const [data, setData] = useState<OwnerOpsData>(demoData);
   const [session, setSession] = useState<Session | null>(null);
   const [cloudStatus, setCloudStatus] = useState(isSupabaseConfigured ? "Checking cloud session..." : "Demo browser storage");
+  const [storageReady, setStorageReady] = useState(false);
   const cloudReady = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const broadcast = useRef<BroadcastChannel | null>(null);
@@ -81,13 +83,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    if (!supabase) return;
+    setData(loadOwnerOpsData());
+    setStorageReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!supabase || !storageReady) return;
     supabase.auth.getSession().then(({ data: authData }) => loadCloudData(authData.session));
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       loadCloudData(nextSession);
     });
     return () => subscription.subscription.unsubscribe();
-  }, []);
+  }, [storageReady]);
 
   useEffect(() => {
     broadcast.current = "BroadcastChannel" in window ? new BroadcastChannel("ownerops-ai-data") : null;
@@ -115,6 +122,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!storageReady) return;
     if (applyingExternalUpdate.current) {
       applyingExternalUpdate.current = false;
       return;
@@ -129,7 +137,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [data, session]);
+  }, [data, session, storageReady]);
 
   const value = useMemo(() => ({ data, setData, session, cloudStatus, syncNow, signOut }), [cloudStatus, data, session]);
 

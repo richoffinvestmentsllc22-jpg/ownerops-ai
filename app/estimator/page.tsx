@@ -29,7 +29,10 @@ function EstimatorContent() {
   const [tradeKey, setTradeKey] = useState<keyof typeof trades>("remodeling");
   const trade = trades[tradeKey];
   const [estimateTitle, setEstimateTitle] = useState("New contractor estimate");
+  const [selectedClientId, setSelectedClientId] = useState("");
+  const [clientName, setClientName] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
+  const [copyMessage, setCopyMessage] = useState("");
   const [inputs, setInputs] = useState({
     quantity: 500,
     materialRate: trade.material,
@@ -54,8 +57,24 @@ function EstimatorContent() {
   }
 
   function updateInput(key: keyof typeof inputs, value: string) {
-    setInputs((current) => ({ ...current, [key]: Number(value) }));
+    setInputs((current) => ({ ...current, [key]: Math.max(0, Number(value)) }));
   }
+
+  const clientOptions = useMemo(
+    () => [
+      ...data.leads.map((lead) => ({ id: `lead:${lead.id}`, name: lead.name, type: "Lead" })),
+      ...data.customers.map((customer) => ({ id: `customer:${customer.id}`, name: customer.name, type: "Customer" }))
+    ],
+    [data.customers, data.leads]
+  );
+
+  function selectClient(nextId: string) {
+    setSelectedClientId(nextId);
+    const selected = clientOptions.find((client) => client.id === nextId);
+    if (selected) setClientName(selected.name);
+  }
+
+  const clientFirstName = (clientName.trim().split(/\s+/)[0] || "there").replace(/[{}]/g, "");
 
   const estimate = useMemo(() => {
     const material = inputs.quantity * inputs.materialRate * inputs.complexity;
@@ -73,12 +92,17 @@ function EstimatorContent() {
   const quoteValue = Math.round(estimate.quote).toLocaleString();
   const quoteMessage =
     data.profile.language === "es"
-      ? `Hola {{first_name}}, para este alcance de ${trade.label.toLowerCase()}, mi precio estimado es $${quoteValue}. Esto incluye materiales, mano de obra, gastos generales, contingencia y margen para completar el trabajo correctamente. El siguiente paso es confirmar medidas, acceso y fecha de inicio.`
+      ? `Hola ${clientFirstName}, para este alcance de ${trade.label.toLowerCase()}, mi precio estimado es $${quoteValue}. Esto incluye materiales, mano de obra, gastos generales, contingencia y margen para completar el trabajo correctamente. El siguiente paso es confirmar medidas, acceso y fecha de inicio.`
       : data.profile.language === "fr"
-        ? `Bonjour {{first_name}}, pour ce projet de ${trade.label.toLowerCase()}, mon prix estimé est de $${quoteValue}. Cela inclut les matériaux, la main-d'oeuvre, les frais généraux, la contingence et la marge pour bien faire le travail. La prochaine étape consiste à confirmer les mesures, l'accès et la date de début.`
+        ? `Bonjour ${clientFirstName}, pour ce projet de ${trade.label.toLowerCase()}, mon prix estimé est de $${quoteValue}. Cela inclut les matériaux, la main-d'oeuvre, les frais généraux, la contingence et la marge pour bien faire le travail. La prochaine étape consiste à confirmer les mesures, l'accès et la date de début.`
         : data.profile.language === "pt"
-          ? `Olá {{first_name}}, para este escopo de ${trade.label.toLowerCase()}, meu preço estimado é $${quoteValue}. Isso inclui materiais, mão de obra, despesas gerais, contingência e margem para fazer o trabalho corretamente. O próximo passo é confirmar medidas, acesso e data de início.`
-          : `Hi {{first_name}}, for this ${trade.label.toLowerCase()} scope, my estimated price is $${quoteValue}. That includes materials, labor, overhead, contingency, and margin to do the job correctly. The next step is confirming measurements, access, and start date.`;
+          ? `Olá ${clientFirstName}, para este escopo de ${trade.label.toLowerCase()}, meu preço estimado é $${quoteValue}. Isso inclui materiais, mão de obra, despesas gerais, contingência e margem para fazer o trabalho corretamente. O próximo passo é confirmar medidas, acesso e data de início.`
+          : `Hi ${clientFirstName}, for this ${trade.label.toLowerCase()} scope, my estimated price is $${quoteValue}. That includes materials, labor, overhead, contingency, and margin to do the job correctly. The next step is confirming measurements, access, and start date.`;
+
+  function copyQuoteMessage() {
+    navigator.clipboard?.writeText(quoteMessage);
+    setCopyMessage(`Copied message for ${clientFirstName}.`);
+  }
 
   function saveEstimateToPipeline() {
     const opportunityId = crypto.randomUUID();
@@ -130,6 +154,31 @@ function EstimatorContent() {
             <span className="label mb-1 block">Estimate Name</span>
             <input className="field" value={estimateTitle} onChange={(event) => setEstimateTitle(event.target.value)} />
           </label>
+          <div className="mb-3 grid gap-3 sm:grid-cols-2">
+            <label>
+              <span className="label mb-1 block">Lead or customer</span>
+              <select className="field" value={selectedClientId} onChange={(event) => selectClient(event.target.value)}>
+                <option value="">Type a client name</option>
+                {clientOptions.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name} ({client.type})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span className="label mb-1 block">Client name for message</span>
+              <input
+                className="field"
+                value={clientName}
+                onChange={(event) => {
+                  setSelectedClientId("");
+                  setClientName(event.target.value);
+                }}
+                placeholder="Example: Marcus"
+              />
+            </label>
+          </div>
           <div className="mb-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
             {Object.entries(trades).map(([key, item]) => (
               <button
@@ -157,19 +206,19 @@ function EstimatorContent() {
             </label>
             <label>
               <span className="label mb-1 block">Quantity ({trade.unit})</span>
-              <input className="field" type="number" value={inputs.quantity} onChange={(event) => updateInput("quantity", event.target.value)} />
+              <input className="field" type="number" min="0" value={inputs.quantity} onChange={(event) => updateInput("quantity", event.target.value)} />
             </label>
             <label>
               <span className="label mb-1 block">Material per {trade.unit}</span>
-              <input className="field" type="number" value={inputs.materialRate} onChange={(event) => updateInput("materialRate", event.target.value)} />
+              <input className="field" type="number" min="0" value={inputs.materialRate} onChange={(event) => updateInput("materialRate", event.target.value)} />
             </label>
             <label>
               <span className="label mb-1 block">Labor hours per {trade.unit}</span>
-              <input className="field" type="number" step="0.01" value={inputs.laborHoursPerUnit} onChange={(event) => updateInput("laborHoursPerUnit", event.target.value)} />
+              <input className="field" type="number" min="0" step="0.01" value={inputs.laborHoursPerUnit} onChange={(event) => updateInput("laborHoursPerUnit", event.target.value)} />
             </label>
             <label>
               <span className="label mb-1 block">Labor rate / hour</span>
-              <input className="field" type="number" value={inputs.laborRate} onChange={(event) => updateInput("laborRate", event.target.value)} />
+              <input className="field" type="number" min="0" value={inputs.laborRate} onChange={(event) => updateInput("laborRate", event.target.value)} />
             </label>
             <label>
               <span className="label mb-1 block">Complexity</span>
@@ -183,15 +232,15 @@ function EstimatorContent() {
             </label>
             <label>
               <span className="label mb-1 block">Overhead %</span>
-              <input className="field" type="number" value={inputs.overheadPercent} onChange={(event) => updateInput("overheadPercent", event.target.value)} />
+              <input className="field" type="number" min="0" value={inputs.overheadPercent} onChange={(event) => updateInput("overheadPercent", event.target.value)} />
             </label>
             <label>
               <span className="label mb-1 block">Contingency %</span>
-              <input className="field" type="number" value={inputs.contingencyPercent} onChange={(event) => updateInput("contingencyPercent", event.target.value)} />
+              <input className="field" type="number" min="0" value={inputs.contingencyPercent} onChange={(event) => updateInput("contingencyPercent", event.target.value)} />
             </label>
             <label>
               <span className="label mb-1 block">Target Profit Margin %</span>
-              <input className="field" type="number" value={inputs.targetMargin} onChange={(event) => updateInput("targetMargin", event.target.value)} />
+              <input className="field" type="number" min="0" value={inputs.targetMargin} onChange={(event) => updateInput("targetMargin", event.target.value)} />
             </label>
           </div>
         </section>
@@ -239,7 +288,7 @@ function EstimatorContent() {
             </button>
             <button
               type="button"
-              onClick={() => navigator.clipboard?.writeText(quoteMessage)}
+              onClick={copyQuoteMessage}
               className="inline-flex items-center gap-2 rounded-md bg-moss px-3 py-2 text-sm font-bold text-white"
             >
               <Copy size={16} />
@@ -254,6 +303,7 @@ function EstimatorContent() {
               Save as PDF
             </button>
             {saveMessage ? <p className="basis-full text-sm leading-6 text-moss">{saveMessage}</p> : null}
+            {copyMessage ? <p className="basis-full text-sm leading-6 text-moss">{copyMessage}</p> : null}
           </div>
         </section>
       </div>

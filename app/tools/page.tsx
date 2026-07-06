@@ -20,6 +20,9 @@ function ToolsContent() {
   const industry = industries[data.profile.industry];
   const pricingRows = data.pricing.filter((row) => row.industry === data.profile.industry);
   const [selectedService, setSelectedService] = useState(pricingRows[0]?.id ?? "");
+  const [selectedClientId, setSelectedClientId] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [copyMessage, setCopyMessage] = useState("");
   const [costs, setCosts] = useState({ revenue: 2500, labor: 600, materials: 350, fuel: 150, fees: 125, targetMargin: 45 });
   const selected = pricingRows.find((row) => row.id === selectedService) ?? pricingRows[0];
   const totalCost = costs.labor + costs.materials + costs.fuel + costs.fees;
@@ -33,16 +36,35 @@ function ToolsContent() {
         ? "above the high end of your current range"
         : "inside your current range"
     : "ready after you add pricing rows";
+  const clientOptions = useMemo(
+    () => [
+      ...data.leads.map((lead) => ({ id: `lead:${lead.id}`, name: lead.name, type: "Lead" })),
+      ...data.customers.map((customer) => ({ id: `customer:${customer.id}`, name: customer.name, type: "Customer" }))
+    ],
+    [data.customers, data.leads]
+  );
+  const clientFirstName = (clientName.trim().split(/\s+/)[0] || "there").replace(/[{}]/g, "");
   const quoteText = useMemo(() => {
     if (!selected) return "Add pricing rows for this industry to generate a quote starter.";
     if (data.profile.language === "es") {
-      return `Hola {{first_name}}, según el alcance para ${selected.serviceName}, un rango realista inicial es $${selected.priceLow.toLocaleString()}-$${selected.priceHigh.toLocaleString()} por ${selected.unit}. ${selected.notes}. Si ese rango funciona, el siguiente paso es confirmar los detalles y reservar una fecha de inicio.`;
+      return `Hola ${clientFirstName}, según el alcance para ${selected.serviceName}, un rango realista inicial es $${selected.priceLow.toLocaleString()}-$${selected.priceHigh.toLocaleString()} por ${selected.unit}. ${selected.notes}. Si ese rango funciona, el siguiente paso es confirmar los detalles y reservar una fecha de inicio.`;
     }
-    return `Hi {{first_name}}, based on the scope for ${selected.serviceName}, a realistic starting range is $${selected.priceLow.toLocaleString()}-$${selected.priceHigh.toLocaleString()} per ${selected.unit}. ${selected.notes}. If that range works, the next step is confirming details and locking in a start date.`;
-  }, [data.profile.language, selected]);
+    return `Hi ${clientFirstName}, based on the scope for ${selected.serviceName}, a realistic starting range is $${selected.priceLow.toLocaleString()}-$${selected.priceHigh.toLocaleString()} per ${selected.unit}. ${selected.notes}. If that range works, the next step is confirming details and locking in a start date.`;
+  }, [clientFirstName, data.profile.language, selected]);
 
   function updateCost(key: keyof typeof costs, value: string) {
-    setCosts((current) => ({ ...current, [key]: Number(value) }));
+    setCosts((current) => ({ ...current, [key]: Math.max(0, Number(value)) }));
+  }
+
+  function selectClient(nextId: string) {
+    setSelectedClientId(nextId);
+    const selectedClient = clientOptions.find((client) => client.id === nextId);
+    if (selectedClient) setClientName(selectedClient.name);
+  }
+
+  function copyQuoteText() {
+    navigator.clipboard?.writeText(quoteText);
+    setCopyMessage(`Copied quote for ${clientFirstName}.`);
   }
 
   return (
@@ -69,15 +91,41 @@ function ToolsContent() {
               ))}
             </select>
           </label>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label>
+              <span className="label mb-1 block">Lead or customer</span>
+              <select className="field" value={selectedClientId} onChange={(event) => selectClient(event.target.value)}>
+                <option value="">Type a client name</option>
+                {clientOptions.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name} ({client.type})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span className="label mb-1 block">Client name for quote</span>
+              <input
+                className="field"
+                value={clientName}
+                onChange={(event) => {
+                  setSelectedClientId("");
+                  setClientName(event.target.value);
+                }}
+                placeholder="Example: Marcus"
+              />
+            </label>
+          </div>
           <div className="mt-4 rounded-md border border-line bg-field p-3 text-sm leading-6 text-ink/75">{quoteText}</div>
           <button
             type="button"
-            onClick={() => navigator.clipboard?.writeText(quoteText)}
+            onClick={copyQuoteText}
             className="mt-3 inline-flex items-center gap-2 rounded-md bg-ink px-3 py-2 text-sm font-bold text-white"
           >
             <Copy size={16} />
             Copy quote
           </button>
+          {copyMessage ? <p className="mt-2 text-sm leading-6 text-moss">{copyMessage}</p> : null}
         </section>
 
         <section className="panel p-4">
@@ -96,7 +144,7 @@ function ToolsContent() {
             ].map(([key, label]) => (
               <label key={key}>
                 <span className="label mb-1 block">{label}</span>
-                <input className="field" type="number" value={costs[key as keyof typeof costs]} onChange={(event) => updateCost(key as keyof typeof costs, event.target.value)} />
+                <input className="field" type="number" min="0" value={costs[key as keyof typeof costs]} onChange={(event) => updateCost(key as keyof typeof costs, event.target.value)} />
               </label>
             ))}
           </div>
