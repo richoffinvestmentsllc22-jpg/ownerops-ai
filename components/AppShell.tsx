@@ -8,11 +8,13 @@ import {
   Calculator,
   ClipboardList,
   Home,
+  Images,
   Layers3,
   LayoutDashboard,
   Megaphone,
   Settings,
   Sparkles,
+  SquarePen,
   UserRoundPlus,
   UsersRound
 } from "lucide-react";
@@ -29,7 +31,9 @@ const navItems = [
   { href: "/customers", label: "Customers", icon: UsersRound },
   { href: "/industries", label: "Industries", icon: Layers3 },
   { href: "/pricing", label: "Pricing", icon: BadgeDollarSign },
+  { href: "/estimator", label: "Estimator", icon: SquarePen },
   { href: "/tools", label: "Tools", icon: Calculator },
+  { href: "/proof", label: "Proof", icon: Images },
   { href: "/outreach", label: "Outreach", icon: Megaphone },
   { href: "/ai-prompts", label: "AI Prompts", icon: Bot },
   { href: "/settings", label: "Settings", icon: Settings }

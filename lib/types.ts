@@ -34,6 +34,7 @@ export type BusinessProfile = {
   businessName: string;
   ownerName: string;
   industry: IndustryKey;
+  language: "en" | "es";
   city: string;
   state: string;
   phone: string;
@@ -105,6 +106,19 @@ export type AiPromptTemplate = {
   prompt: string;
 };
 
+export type ProofItem = {
+  id: string;
+  title: string;
+  clientName: string;
+  service: string;
+  industry: IndustryKey;
+  beforeImage: string;
+  afterImage: string;
+  outcome: string;
+  notes: string;
+  createdAt: string;
+};
+
 export type OwnerOpsData = {
   profile: BusinessProfile;
   customers: Customer[];
@@ -114,4 +128,5 @@ export type OwnerOpsData = {
   pricing: ServicePricing[];
   outreach: OutreachTemplate[];
   prompts: AiPromptTemplate[];
+  proof: ProofItem[];
 };

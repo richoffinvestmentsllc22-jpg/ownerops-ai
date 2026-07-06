@@ -35,7 +35,8 @@ function hydrateOwnerOpsData(data: OwnerOpsData): OwnerOpsData {
     tasks: data.tasks ?? demoData.tasks,
     pricing: mergeById(data.pricing, seedPricing),
     outreach: mergeById(data.outreach, seedOutreach),
-    prompts: mergeById(data.prompts, seedPrompts)
+    prompts: mergeById(data.prompts, seedPrompts),
+    proof: data.proof ?? demoData.proof
   };
 }
 

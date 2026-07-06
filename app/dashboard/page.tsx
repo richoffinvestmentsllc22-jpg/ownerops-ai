@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeDollarSign, BriefcaseBusiness, CalendarClock, ClipboardList, Layers3, ShieldCheck, UserRoundPlus } from "lucide-react";
+import { BadgeDollarSign, BriefcaseBusiness, CalendarClock, ClipboardList, Images, Layers3, ShieldCheck, SquarePen, UserRoundPlus } from "lucide-react";
 import Link from "next/link";
 import { OwnerCoach } from "@/components/OwnerCoach";
 import { PageFrame } from "@/components/PageFrame";
@@ -90,6 +90,40 @@ function DashboardContent() {
               </p>
               <Link href="/tools" className="mt-3 inline-flex rounded-md border border-line bg-white px-3 py-2 text-sm font-bold">
                 Open tools
+              </Link>
+            </div>
+          </div>
+        </section>
+        <section className="panel p-4">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-gold text-ink">
+              <SquarePen size={18} />
+            </span>
+            <div>
+              <p className="label">Estimator</p>
+              <h2 className="font-black">Build quotes that include overhead and profit</h2>
+              <p className="mt-2 text-sm leading-6 text-ink/65">
+                For construction trades, estimate by quantity, material, labor hours, complexity, overhead, contingency, and target margin.
+              </p>
+              <Link href="/estimator" className="mt-3 inline-flex rounded-md bg-ink px-3 py-2 text-sm font-bold text-white">
+                Open estimator
+              </Link>
+            </div>
+          </div>
+        </section>
+        <section className="panel p-4">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-sky text-white">
+              <Images size={18} />
+            </span>
+            <div>
+              <p className="label">Proof</p>
+              <h2 className="font-black">Save before-and-after photos for follow-up</h2>
+              <p className="mt-2 text-sm leading-6 text-ink/65">
+                Use visual proof with leads, quotes, social posts, and reactivation messages so clients can see why the price makes sense.
+              </p>
+              <Link href="/proof" className="mt-3 inline-flex rounded-md border border-line bg-white px-3 py-2 text-sm font-bold">
+                Open proof library
               </Link>
             </div>
           </div>

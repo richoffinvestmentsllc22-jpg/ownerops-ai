@@ -20,15 +20,26 @@ function ToolsContent() {
   const industry = industries[data.profile.industry];
   const pricingRows = data.pricing.filter((row) => row.industry === data.profile.industry);
   const [selectedService, setSelectedService] = useState(pricingRows[0]?.id ?? "");
-  const [costs, setCosts] = useState({ revenue: 2500, labor: 600, materials: 350, fuel: 150, fees: 125 });
+  const [costs, setCosts] = useState({ revenue: 2500, labor: 600, materials: 350, fuel: 150, fees: 125, targetMargin: 45 });
   const selected = pricingRows.find((row) => row.id === selectedService) ?? pricingRows[0];
   const totalCost = costs.labor + costs.materials + costs.fuel + costs.fees;
   const profit = costs.revenue - totalCost;
   const margin = costs.revenue > 0 ? Math.round((profit / costs.revenue) * 100) : 0;
+  const recommendedMinimum = costs.targetMargin < 100 ? Math.ceil(totalCost / (1 - costs.targetMargin / 100)) : totalCost;
+  const pricingPosition = selected
+    ? recommendedMinimum < selected.priceLow
+      ? "below the low end of your current range"
+      : recommendedMinimum > selected.priceHigh
+        ? "above the high end of your current range"
+        : "inside your current range"
+    : "ready after you add pricing rows";
   const quoteText = useMemo(() => {
     if (!selected) return "Add pricing rows for this industry to generate a quote starter.";
+    if (data.profile.language === "es") {
+      return `Hola {{first_name}}, según el alcance para ${selected.serviceName}, un rango realista inicial es $${selected.priceLow.toLocaleString()}-$${selected.priceHigh.toLocaleString()} por ${selected.unit}. ${selected.notes}. Si ese rango funciona, el siguiente paso es confirmar los detalles y reservar una fecha de inicio.`;
+    }
     return `Hi {{first_name}}, based on the scope for ${selected.serviceName}, a realistic starting range is $${selected.priceLow.toLocaleString()}-$${selected.priceHigh.toLocaleString()} per ${selected.unit}. ${selected.notes}. If that range works, the next step is confirming details and locking in a start date.`;
-  }, [selected]);
+  }, [data.profile.language, selected]);
 
   function updateCost(key: keyof typeof costs, value: string) {
     setCosts((current) => ({ ...current, [key]: Number(value) }));
@@ -80,7 +91,8 @@ function ToolsContent() {
               ["labor", "Labor"],
               ["materials", "Materials / Parts"],
               ["fuel", "Fuel / Travel"],
-              ["fees", "Fees / Overhead"]
+              ["fees", "Fees / Overhead"],
+              ["targetMargin", "Target Margin %"]
             ].map(([key, label]) => (
               <label key={key}>
                 <span className="label mb-1 block">{label}</span>
@@ -101,6 +113,13 @@ function ToolsContent() {
               <p className="label">Margin</p>
               <p className="mt-1 text-xl font-black">{margin}%</p>
             </div>
+          </div>
+          <div className="mt-4 rounded-md border border-line bg-white p-3">
+            <p className="label">Recommended minimum</p>
+            <p className="mt-1 text-2xl font-black">${recommendedMinimum.toLocaleString()}</p>
+            <p className="mt-2 text-sm leading-6 text-ink/65">
+              At a {costs.targetMargin}% target margin, this price is {pricingPosition}. Use this to avoid quoting work that looks busy but loses money.
+            </p>
           </div>
         </section>
       </div>

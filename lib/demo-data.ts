@@ -7,6 +7,7 @@ export const demoData: OwnerOpsData = {
     businessName: "OwnerOps Demo Co.",
     ownerName: "Jordan Owner",
     industry: "cleaning_services",
+    language: "en",
     city: "Austin",
     state: "TX",
     phone: "555-010-4488",
@@ -91,5 +92,19 @@ export const demoData: OwnerOpsData = {
   ],
   pricing: seedPricing,
   outreach: seedOutreach,
-  prompts: seedPrompts
+  prompts: seedPrompts,
+  proof: [
+    {
+      id: "proof-1",
+      title: "Move-out clean transformation",
+      clientName: "Northside Property Group",
+      service: "Move-out clean",
+      industry: "cleaning_services",
+      beforeImage: "",
+      afterImage: "",
+      outcome: "Turned a rough rental turnover into a show-ready unit before the weekend leasing window.",
+      notes: "Great example for property managers and landlords. Add real photos when available.",
+      createdAt: new Date().toISOString()
+    }
+  ]
 };

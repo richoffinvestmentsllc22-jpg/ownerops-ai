@@ -53,6 +53,13 @@ function SettingsContent() {
           </select>
         </label>
         <label>
+          <span className="label mb-1 block">Client Message Language</span>
+          <select className="field" value={data.profile.language} onChange={(event) => updateProfile("language", event.target.value)}>
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+          </select>
+        </label>
+        <label>
           <span className="label mb-1 block">Phone</span>
           <input className="field" value={data.profile.phone} onChange={(event) => updateProfile("phone", event.target.value)} />
         </label>
