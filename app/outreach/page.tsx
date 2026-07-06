@@ -6,10 +6,12 @@ import { PageFrame } from "@/components/PageFrame";
 import { SectionHeader } from "@/components/SectionHeader";
 import { useOwnerOps } from "@/components/DataProvider";
 import { industries } from "@/lib/industry-packs";
+import { defaultRecipientName, personalizeTemplate } from "@/lib/templates";
 import type { IndustryKey, OutreachTemplate } from "@/lib/types";
 
 function OutreachContent() {
   const { data, setData } = useOwnerOps();
+  const recipientName = defaultRecipientName(data);
   const industryOptions = Object.entries(industries).map(([value, pack]) => ({ value, label: pack.label }));
   const currentTemplates = data.outreach.filter((row) => row.industry === data.profile.industry);
   return (
@@ -30,13 +32,13 @@ function OutreachContent() {
               <button
                 type="button"
                 aria-label="Copy script"
-                onClick={() => navigator.clipboard.writeText(template.template)}
+                onClick={() => navigator.clipboard.writeText(personalizeTemplate(template.template, data, { recipientName }))}
                 className="grid h-9 w-9 place-items-center rounded-md border border-line bg-white"
               >
                 <Copy size={15} />
               </button>
             </div>
-            <p className="whitespace-pre-line text-sm leading-6 text-ink/70">{template.template}</p>
+            <p className="whitespace-pre-line text-sm leading-6 text-ink/70">{personalizeTemplate(template.template, data, { recipientName })}</p>
           </article>
         ))}
       </div>

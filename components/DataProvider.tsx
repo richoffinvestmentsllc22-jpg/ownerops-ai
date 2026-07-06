@@ -141,6 +141,22 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo(() => ({ data, setData, session, cloudStatus, syncNow, signOut }), [cloudStatus, data, session]);
 
+  if (!storageReady) {
+    return (
+      <div className="min-h-screen bg-field px-4 py-6">
+        <div className="mx-auto max-w-7xl">
+          <div className="h-16 rounded-md border border-line bg-white shadow-soft" />
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="h-28 rounded-md border border-line bg-white shadow-soft" />
+            <div className="h-28 rounded-md border border-line bg-white shadow-soft" />
+            <div className="h-28 rounded-md border border-line bg-white shadow-soft" />
+            <div className="h-28 rounded-md border border-line bg-white shadow-soft" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }
 

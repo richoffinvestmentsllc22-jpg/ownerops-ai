@@ -10,6 +10,7 @@ export type FieldConfig<T> = {
   type?: "text" | "number" | "date" | "textarea" | "select";
   options?: Array<{ label: string; value: string }>;
   format?: (value: T[keyof T], row: T) => string;
+  required?: boolean;
 };
 
 export function CrudManager<T extends { id: string }>({
@@ -32,24 +33,42 @@ export function CrudManager<T extends { id: string }>({
   onSave?: (row: T, rows: T[]) => T[];
 }) {
   const [editing, setEditing] = useState<T | null>(null);
+  const [formError, setFormError] = useState("");
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const visibleRows = useMemo(() => (filter ? rows.filter(filter) : rows), [filter, rows]);
+  const requiredFields = useMemo(() => {
+    const explicit = fields.filter((field) => field.required);
+    return explicit.length > 0 ? explicit : fields.slice(0, 1);
+  }, [fields]);
 
   function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editing) return;
+    const missing = requiredFields.find((field) => String(editing[field.key] ?? "").trim() === "");
+    if (missing) {
+      setFormError(`${missing.label} is required before saving.`);
+      return;
+    }
     const exists = rows.some((row) => row.id === editing.id);
     const nextRows = exists ? rows.map((row) => (row.id === editing.id ? editing : row)) : [editing, ...rows];
     setRows(onSave ? onSave(editing, nextRows) : nextRows);
     setEditing(null);
+    setFormError("");
   }
 
   function updateField(key: keyof T, value: string) {
     if (!editing) return;
     const config = fields.find((field) => field.key === key);
+    setFormError("");
     setEditing({
       ...editing,
-      [key]: config?.type === "number" ? Number(value) : value
+      [key]: config?.type === "number" ? Math.max(0, Number(value)) : value
     });
+  }
+
+  function confirmDelete(row: T) {
+    setRows(rows.filter((item) => item.id !== row.id));
+    setPendingDeleteId(null);
   }
 
   return (
@@ -61,7 +80,11 @@ export function CrudManager<T extends { id: string }>({
         </div>
         <button
           type="button"
-          onClick={() => setEditing(emptyRow())}
+          onClick={() => {
+            setFormError("");
+            setPendingDeleteId(null);
+            setEditing(emptyRow());
+          }}
           className="inline-flex items-center gap-2 rounded-md bg-ink px-3 py-2 text-sm font-bold text-white shadow-soft transition hover:-translate-y-0.5"
         >
           <Plus size={16} />
@@ -97,7 +120,11 @@ export function CrudManager<T extends { id: string }>({
                         ))}
                       </select>
                     ) : (
-                      <input {...common} type={field.type ?? "text"} />
+                      <input
+                        {...common}
+                        type={field.type ?? "text"}
+                        min={field.type === "number" ? 0 : undefined}
+                      />
                     )}
                   </span>
                   {canDictate ? (
@@ -124,6 +151,7 @@ export function CrudManager<T extends { id: string }>({
               Cancel
             </button>
           </div>
+          {formError ? <p className="rounded-md border border-clay/30 bg-clay/10 px-3 py-2 text-sm font-semibold text-clay sm:col-span-2">{formError}</p> : null}
         </form>
       ) : null}
 
@@ -158,19 +186,42 @@ export function CrudManager<T extends { id: string }>({
                         <button
                           type="button"
                           aria-label="Edit"
-                          onClick={() => setEditing(row)}
+                          onClick={() => {
+                            setPendingDeleteId(null);
+                            setFormError("");
+                            setEditing(row);
+                          }}
                           className="grid h-9 w-9 place-items-center rounded-md border border-line bg-white"
                         >
                           <Edit3 size={15} />
                         </button>
-                        <button
-                          type="button"
-                          aria-label="Delete"
-                          onClick={() => setRows(rows.filter((item) => item.id !== row.id))}
-                          className="grid h-9 w-9 place-items-center rounded-md border border-line bg-white text-clay"
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        {pendingDeleteId === row.id ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => confirmDelete(row)}
+                              className="rounded-md bg-clay px-3 py-2 text-xs font-black text-white"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPendingDeleteId(null)}
+                              className="rounded-md border border-line bg-white px-3 py-2 text-xs font-black"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            aria-label="Delete"
+                            onClick={() => setPendingDeleteId(row.id)}
+                            className="grid h-9 w-9 place-items-center rounded-md border border-line bg-white text-clay"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

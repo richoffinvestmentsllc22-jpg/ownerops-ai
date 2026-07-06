@@ -62,6 +62,8 @@ function ProofImage({ src, label }: { src: string; label: string }) {
 function ProofContent() {
   const { data, setData } = useOwnerOps();
   const [editing, setEditing] = useState<ProofItem | null>(null);
+  const [formError, setFormError] = useState("");
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const proofRows = data.proof.filter((item) => item.industry === data.profile.industry);
   const industry = industries[data.profile.industry];
   const activeProof = proofRows[0];
@@ -84,15 +86,21 @@ function ProofContent() {
   function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editing) return;
+    if (!editing.title.trim()) {
+      setFormError("Title is required before saving proof.");
+      return;
+    }
     const exists = data.proof.some((item) => item.id === editing.id);
     setData((current) => ({
       ...current,
       proof: exists ? current.proof.map((item) => (item.id === editing.id ? editing : item)) : [editing, ...current.proof]
     }));
     setEditing(null);
+    setFormError("");
   }
 
   function updateField(key: keyof ProofItem, value: string) {
+    setFormError("");
     setEditing((current) => (current ? { ...current, [key]: value } : current));
   }
 
@@ -105,6 +113,7 @@ function ProofContent() {
 
   function deleteProof(id: string) {
     setData((current) => ({ ...current, proof: current.proof.filter((item) => item.id !== id) }));
+    setPendingDeleteId(null);
   }
 
   function proofLink(item: ProofItem) {
@@ -152,7 +161,11 @@ function ProofContent() {
           <div className="mt-4 rounded-md border border-line bg-field p-3 text-sm leading-6 text-ink/75">{proofMessage}</div>
           <button
             type="button"
-            onClick={() => setEditing(emptyProof(data.profile.industry))}
+            onClick={() => {
+              setPendingDeleteId(null);
+              setFormError("");
+              setEditing(emptyProof(data.profile.industry));
+            }}
             className="mt-4 inline-flex items-center gap-2 rounded-md bg-moss px-3 py-2 text-sm font-bold text-white"
           >
             <Plus size={16} />
@@ -164,7 +177,7 @@ function ProofContent() {
           <form onSubmit={save} className="panel grid gap-4 p-4 sm:grid-cols-2">
             <label>
               <span className="label mb-1 block">Title</span>
-              <input className="field" value={editing.title} onChange={(event) => updateField("title", event.target.value)} />
+              <input className="field" required value={editing.title} onChange={(event) => updateField("title", event.target.value)} />
             </label>
             <label>
               <span className="label mb-1 block">Client or Lead</span>
@@ -198,6 +211,7 @@ function ProofContent() {
                 Cancel
               </button>
             </div>
+            {formError ? <p className="rounded-md border border-clay/30 bg-clay/10 px-3 py-2 text-sm font-semibold text-clay sm:col-span-2">{formError}</p> : null}
           </form>
         ) : (
           <section className="panel p-4">
@@ -221,7 +235,15 @@ function ProofContent() {
                 <p className="mt-1 text-sm text-ink/60">{item.clientName || "No client attached"}</p>
               </div>
               <div className="flex gap-2">
-                <button type="button" onClick={() => setEditing(item)} className="rounded-md border border-line bg-white px-3 py-2 text-sm font-bold">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingDeleteId(null);
+                    setFormError("");
+                    setEditing(item);
+                  }}
+                  className="rounded-md border border-line bg-white px-3 py-2 text-sm font-bold"
+                >
                   Edit
                 </button>
                 <button type="button" aria-label="Copy proof package" onClick={() => copyProofPackage(item)} className="grid h-9 w-9 place-items-center rounded-md border border-line bg-white">
@@ -230,9 +252,20 @@ function ProofContent() {
                 <button type="button" aria-label="Share proof" onClick={() => shareProof(item)} className="grid h-9 w-9 place-items-center rounded-md border border-line bg-white">
                   <Share2 size={15} />
                 </button>
-                <button type="button" aria-label="Delete proof" onClick={() => deleteProof(item.id)} className="grid h-9 w-9 place-items-center rounded-md border border-line bg-white text-clay">
-                  <Trash2 size={15} />
-                </button>
+                {pendingDeleteId === item.id ? (
+                  <>
+                    <button type="button" onClick={() => deleteProof(item.id)} className="rounded-md bg-clay px-3 py-2 text-xs font-black text-white">
+                      Confirm
+                    </button>
+                    <button type="button" onClick={() => setPendingDeleteId(null)} className="rounded-md border border-line bg-white px-3 py-2 text-xs font-black">
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button type="button" aria-label="Delete proof" onClick={() => setPendingDeleteId(item.id)} className="grid h-9 w-9 place-items-center rounded-md border border-line bg-white text-clay">
+                    <Trash2 size={15} />
+                  </button>
+                )}
               </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
