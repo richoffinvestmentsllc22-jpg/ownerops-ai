@@ -23,6 +23,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [cloudStatus, setCloudStatus] = useState(isSupabaseConfigured ? "Checking cloud session..." : "Demo browser storage");
   const cloudReady = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const broadcast = useRef<BroadcastChannel | null>(null);
+  const applyingExternalUpdate = useRef(false);
 
   async function loadCloudData(nextSession: Session | null) {
     setSession(nextSession);
@@ -88,7 +90,37 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    broadcast.current = "BroadcastChannel" in window ? new BroadcastChannel("ownerops-ai-data") : null;
+    const channel = broadcast.current;
+    const receiveData = (nextData: OwnerOpsData) => {
+      applyingExternalUpdate.current = true;
+      setData(hydrateOwnerOpsData(nextData));
+    };
+
+    channel?.addEventListener("message", (event: MessageEvent<OwnerOpsData>) => receiveData(event.data));
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== "ownerops-ai-data" || !event.newValue) return;
+      try {
+        receiveData(JSON.parse(event.newValue) as OwnerOpsData);
+      } catch {
+        setCloudStatus("Browser sync needs a refresh.");
+      }
+    };
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      channel?.close();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (applyingExternalUpdate.current) {
+      applyingExternalUpdate.current = false;
+      return;
+    }
     saveOwnerOpsData(data);
+    broadcast.current?.postMessage(data);
     if (!session || !cloudReady.current) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {

@@ -1,10 +1,12 @@
 "use client";
 
-import { CheckCircle2, Cloud, Database, LogOut, Mail, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
+import { CheckCircle2, Cloud, Database, LogOut, Mail, RefreshCw, RotateCcw, ShieldCheck, Sparkles, XCircle } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { PageFrame } from "@/components/PageFrame";
 import { SectionHeader } from "@/components/SectionHeader";
 import { useOwnerOps } from "@/components/DataProvider";
+import { blankData } from "@/lib/blank-data";
+import { demoData } from "@/lib/demo-data";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 const setupSteps = [
@@ -16,7 +18,7 @@ const setupSteps = [
 ];
 
 function AccountContent() {
-  const { session, cloudStatus, syncNow, signOut } = useOwnerOps();
+  const { session, cloudStatus, syncNow, signOut, setData } = useOwnerOps();
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [message, setMessage] = useState("");
@@ -134,6 +136,31 @@ function AccountContent() {
 
       <div className="mt-5 grid gap-4 lg:grid-cols-3">
         <section className="panel p-4">
+          <Sparkles size={20} />
+          <h2 className="mt-3 font-black">Tester Mode</h2>
+          <p className="mt-2 text-sm leading-6 text-ink/65">
+            Every tester gets their own browser workspace. They will not see your saved fields unless they use your same browser or account.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setData(blankData)}
+              className="inline-flex items-center gap-2 rounded-md bg-ink px-3 py-2 text-sm font-bold text-white"
+            >
+              <Sparkles size={16} />
+              Blank test
+            </button>
+            <button
+              type="button"
+              onClick={() => setData(demoData)}
+              className="inline-flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm font-bold"
+            >
+              <RotateCcw size={16} />
+              Sample data
+            </button>
+          </div>
+        </section>
+        <section className="panel p-4">
           <Cloud size={20} />
           <h2 className="mt-3 font-black">Cloud Data</h2>
           <p className="mt-2 text-sm leading-6 text-ink/65">Accounts let owners keep leads, estimates, proof photos, and scripts across phones and computers.</p>
@@ -142,11 +169,6 @@ function AccountContent() {
           <ShieldCheck size={20} />
           <h2 className="mt-3 font-black">Trust</h2>
           <p className="mt-2 text-sm leading-6 text-ink/65">Real login is needed before charging customers, storing client work, or creating public proof galleries.</p>
-        </section>
-        <section className="panel p-4">
-          <Database size={20} />
-          <h2 className="mt-3 font-black">Next Build Step</h2>
-          <p className="mt-2 text-sm leading-6 text-ink/65">Next, add paid plans, a custom domain, and public proof-gallery links for clients who want branded before-and-after pages.</p>
         </section>
       </div>
     </>

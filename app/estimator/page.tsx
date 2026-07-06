@@ -1,6 +1,6 @@
 "use client";
 
-import { Calculator, Copy, FileDown, Hammer, ShieldAlert } from "lucide-react";
+import { BadgeDollarSign, Calculator, Copy, FileDown, Hammer, Save, ShieldAlert } from "lucide-react";
 import { useMemo, useState } from "react";
 import { PageFrame } from "@/components/PageFrame";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -25,9 +25,11 @@ const complexityOptions = [
 ];
 
 function EstimatorContent() {
-  const { data } = useOwnerOps();
+  const { data, setData } = useOwnerOps();
   const [tradeKey, setTradeKey] = useState<keyof typeof trades>("remodeling");
   const trade = trades[tradeKey];
+  const [estimateTitle, setEstimateTitle] = useState("New contractor estimate");
+  const [saveMessage, setSaveMessage] = useState("");
   const [inputs, setInputs] = useState({
     quantity: 500,
     materialRate: trade.material,
@@ -78,6 +80,38 @@ function EstimatorContent() {
           ? `Olá {{first_name}}, para este escopo de ${trade.label.toLowerCase()}, meu preço estimado é $${quoteValue}. Isso inclui materiais, mão de obra, despesas gerais, contingência e margem para fazer o trabalho corretamente. O próximo passo é confirmar medidas, acesso e data de início.`
           : `Hi {{first_name}}, for this ${trade.label.toLowerCase()} scope, my estimated price is $${quoteValue}. That includes materials, labor, overhead, contingency, and margin to do the job correctly. The next step is confirming measurements, access, and start date.`;
 
+  function saveEstimateToPipeline() {
+    const opportunityId = crypto.randomUUID();
+    const taskId = crypto.randomUUID();
+    setData((current) => ({
+      ...current,
+      opportunities: [
+        {
+          id: opportunityId,
+          title: estimateTitle || `${trade.label} estimate`,
+          stage: "estimate",
+          value: Math.round(estimate.quote),
+          closeDate: "",
+          probability: 50,
+          notes: `Estimator saved quote: $${quoteValue}. True cost: $${Math.round(estimate.cost).toLocaleString()}. Projected profit: $${Math.round(estimate.profit).toLocaleString()}.`
+        },
+        ...current.opportunities
+      ],
+      tasks: [
+        {
+          id: taskId,
+          title: `Follow up on ${estimateTitle || trade.label}`,
+          dueDate: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+          priority: "high",
+          status: "todo",
+          notes: quoteMessage
+        },
+        ...current.tasks
+      ]
+    }));
+    setSaveMessage("Saved to Pipeline and added a follow-up task.");
+  }
+
   return (
     <>
       <SectionHeader
@@ -91,6 +125,24 @@ function EstimatorContent() {
           <div className="mb-4 flex items-center gap-2">
             <Hammer size={18} />
             <h2 className="font-black">Estimate Inputs</h2>
+          </div>
+          <label className="mb-3 block">
+            <span className="label mb-1 block">Estimate Name</span>
+            <input className="field" value={estimateTitle} onChange={(event) => setEstimateTitle(event.target.value)} />
+          </label>
+          <div className="mb-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            {Object.entries(trades).map(([key, item]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => selectTrade(key as keyof typeof trades)}
+                className={`rounded-md border px-3 py-2 text-left text-sm font-bold transition ${
+                  tradeKey === key ? "border-ink bg-ink text-white" : "border-line bg-white text-ink/70 hover:border-sky hover:text-ink"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <label>
@@ -167,13 +219,24 @@ function EstimatorContent() {
               <p className="mt-1 text-xl font-black">${Math.round(estimate.cost).toLocaleString()}</p>
             </div>
           </div>
-          <div className="mt-4 rounded-md border border-line bg-ink p-4 text-white">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-white/60">Quote at or above</p>
-            <p className="mt-1 text-3xl font-black">${Math.round(estimate.quote).toLocaleString()}</p>
-            <p className="mt-2 text-sm text-white/70">Projected profit: ${Math.round(estimate.profit).toLocaleString()}</p>
+          <div className="mt-4 rounded-md border border-line bg-navy p-4 text-white shadow-lift">
+            <div className="flex items-center gap-2">
+              <BadgeDollarSign size={18} className="text-gold" />
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-white/65">Quote at or above</p>
+            </div>
+            <p className="mt-2 text-4xl font-black">${Math.round(estimate.quote).toLocaleString()}</p>
+            <p className="mt-2 text-sm text-white/75">Projected profit: ${Math.round(estimate.profit).toLocaleString()}</p>
           </div>
           <div className="mt-4 rounded-md border border-line bg-field p-3 text-sm leading-6 text-ink/75">{quoteMessage}</div>
           <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={saveEstimateToPipeline}
+              className="inline-flex items-center gap-2 rounded-md bg-ink px-3 py-2 text-sm font-bold text-white"
+            >
+              <Save size={16} />
+              Save to pipeline
+            </button>
             <button
               type="button"
               onClick={() => navigator.clipboard?.writeText(quoteMessage)}
@@ -190,6 +253,7 @@ function EstimatorContent() {
               <FileDown size={16} />
               Save as PDF
             </button>
+            {saveMessage ? <p className="basis-full text-sm leading-6 text-moss">{saveMessage}</p> : null}
           </div>
         </section>
       </div>

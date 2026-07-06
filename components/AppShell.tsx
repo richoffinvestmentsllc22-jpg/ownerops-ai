@@ -14,7 +14,6 @@ import {
   LayoutDashboard,
   Megaphone,
   Settings,
-  Sparkles,
   SquarePen,
   UserRoundPlus,
   UsersRound
@@ -50,17 +49,18 @@ export function AppShell({ data, children }: { data: OwnerOpsData; children: Rea
       <header className="sticky top-0 z-20 border-b border-line bg-field/92 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
           <Link href="/dashboard" className="flex min-w-0 items-center gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-ink text-white">
-              <Sparkles size={20} />
+            <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-md bg-navy text-white shadow-lift">
+              <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-gold" />
+              <span className="text-lg font-black tracking-normal">OO</span>
             </span>
             <span className="min-w-0">
               <span className="block truncate text-base font-black">OwnerOps AI</span>
-              <span className="block truncate text-xs text-ink/60">{data.profile.businessName}</span>
+              <span className="block truncate text-xs text-ink/60">{data.profile.businessName || "Set up business profile"}</span>
             </span>
           </Link>
           <Link
             href="/settings"
-            className="hidden rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold text-ink sm:block"
+            className="hidden rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold text-ink shadow-soft transition hover:border-sky sm:block"
           >
             {industry.label}
           </Link>

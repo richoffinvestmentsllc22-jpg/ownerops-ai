@@ -10,15 +10,17 @@ const config: Config = {
     extend: {
       colors: {
         ink: "#17212b",
-        field: "#f6f7f2",
-        line: "#d8ded5",
-        moss: "#52715e",
-        clay: "#b46b4e",
-        gold: "#d3a84f",
-        sky: "#6d99aa"
+        field: "#f4f6f8",
+        line: "#d8e0e3",
+        moss: "#26685c",
+        clay: "#b45f43",
+        gold: "#d4a52f",
+        sky: "#2d8aa5",
+        navy: "#102a43"
       },
       boxShadow: {
-        soft: "0 12px 30px rgba(23, 33, 43, 0.08)"
+        soft: "0 12px 30px rgba(23, 33, 43, 0.08)",
+        lift: "0 18px 46px rgba(16, 42, 67, 0.14)"
       }
     }
   },

@@ -2,6 +2,7 @@
 
 import { Edit3, Plus, Save, Trash2, X } from "lucide-react";
 import { FormEvent, useMemo, useState } from "react";
+import { VoiceInputButton } from "@/components/VoiceInputButton";
 
 export type FieldConfig<T> = {
   key: keyof T;
@@ -18,7 +19,8 @@ export function CrudManager<T extends { id: string }>({
   emptyRow,
   title,
   emptyState,
-  filter
+  filter,
+  onSave
 }: {
   rows: T[];
   setRows: (rows: T[]) => void;
@@ -27,6 +29,7 @@ export function CrudManager<T extends { id: string }>({
   title: string;
   emptyState: string;
   filter?: (row: T) => boolean;
+  onSave?: (row: T, rows: T[]) => T[];
 }) {
   const [editing, setEditing] = useState<T | null>(null);
   const visibleRows = useMemo(() => (filter ? rows.filter(filter) : rows), [filter, rows]);
@@ -35,7 +38,8 @@ export function CrudManager<T extends { id: string }>({
     event.preventDefault();
     if (!editing) return;
     const exists = rows.some((row) => row.id === editing.id);
-    setRows(exists ? rows.map((row) => (row.id === editing.id ? editing : row)) : [editing, ...rows]);
+    const nextRows = exists ? rows.map((row) => (row.id === editing.id ? editing : row)) : [editing, ...rows];
+    setRows(onSave ? onSave(editing, nextRows) : nextRows);
     setEditing(null);
   }
 
@@ -50,12 +54,15 @@ export function CrudManager<T extends { id: string }>({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-black">{title}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line bg-white p-3 shadow-soft">
+        <div>
+          <h2 className="text-lg font-black">{title}</h2>
+          <p className="mt-1 text-sm text-ink/55">{visibleRows.length} record{visibleRows.length === 1 ? "" : "s"}</p>
+        </div>
         <button
           type="button"
           onClick={() => setEditing(emptyRow())}
-          className="inline-flex items-center gap-2 rounded-md bg-ink px-3 py-2 text-sm font-bold text-white"
+          className="inline-flex items-center gap-2 rounded-md bg-ink px-3 py-2 text-sm font-bold text-white shadow-soft transition hover:-translate-y-0.5"
         >
           <Plus size={16} />
           Add
@@ -66,6 +73,7 @@ export function CrudManager<T extends { id: string }>({
         <form onSubmit={save} className="panel grid gap-4 p-4 sm:grid-cols-2">
           {fields.map((field) => {
             const value = String(editing[field.key] ?? "");
+            const canDictate = field.type !== "number" && field.type !== "date" && field.type !== "select";
             const common = {
               id: String(field.key),
               value,
@@ -76,19 +84,29 @@ export function CrudManager<T extends { id: string }>({
             return (
               <label key={String(field.key)} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
                 <span className="label mb-1 block">{field.label}</span>
-                {field.type === "textarea" ? (
-                  <textarea {...common} rows={4} />
-                ) : field.type === "select" ? (
-                  <select {...common}>
-                    {field.options?.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input {...common} type={field.type ?? "text"} />
-                )}
+                <span className="flex items-start gap-2">
+                  <span className="min-w-0 flex-1">
+                    {field.type === "textarea" ? (
+                      <textarea {...common} rows={4} />
+                    ) : field.type === "select" ? (
+                      <select {...common}>
+                        {field.options?.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input {...common} type={field.type ?? "text"} />
+                    )}
+                  </span>
+                  {canDictate ? (
+                    <VoiceInputButton
+                      label={field.label}
+                      onTranscript={(text) => updateField(field.key, value ? `${value} ${text}` : text)}
+                    />
+                  ) : null}
+                </span>
               </label>
             );
           })}
@@ -115,22 +133,22 @@ export function CrudManager<T extends { id: string }>({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] border-collapse text-left text-sm">
-              <thead className="border-b border-line bg-field">
+              <thead className="border-b border-line bg-ink text-white">
                 <tr>
                   {fields.slice(0, 5).map((field) => (
-                    <th key={String(field.key)} className="px-4 py-3 font-bold">
+                    <th key={String(field.key)} className="px-4 py-3 text-xs font-black uppercase tracking-[0.08em] text-white/75">
                       {field.label}
                     </th>
                   ))}
-                  <th className="px-4 py-3 text-right font-bold">Actions</th>
+                  <th className="px-4 py-3 text-right text-xs font-black uppercase tracking-[0.08em] text-white/75">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {visibleRows.map((row) => (
-                  <tr key={row.id} className="border-b border-line/70 last:border-0">
+                {visibleRows.map((row, index) => (
+                  <tr key={row.id} className={`border-b border-line/70 last:border-0 ${index % 2 === 0 ? "bg-white" : "bg-field/55"}`}>
                     {fields.slice(0, 5).map((field) => (
                       <td key={String(field.key)} className="max-w-[260px] px-4 py-3 align-top text-ink/75">
-                        <span className="line-clamp-2">
+                        <span className="line-clamp-2 rounded-md">
                           {field.format ? field.format(row[field.key], row) : String(row[field.key] ?? "")}
                         </span>
                       </td>
