@@ -6,6 +6,7 @@ import {
   Bot,
   BriefcaseBusiness,
   Calculator,
+  Cloud,
   ClipboardList,
   Home,
   Images,
@@ -36,6 +37,7 @@ const navItems = [
   { href: "/proof", label: "Proof", icon: Images },
   { href: "/outreach", label: "Outreach", icon: Megaphone },
   { href: "/ai-prompts", label: "AI Prompts", icon: Bot },
+  { href: "/account", label: "Account", icon: Cloud },
   { href: "/settings", label: "Settings", icon: Settings }
 ] as const;
 

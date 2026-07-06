@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, ImagePlus, Plus, Trash2 } from "lucide-react";
+import { Copy, ImagePlus, Link2, Plus, Share2, Trash2 } from "lucide-react";
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import { PageFrame } from "@/components/PageFrame";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -24,7 +24,25 @@ const emptyProof = (industry: ProofItem["industry"]): ProofItem => ({
 function readImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
+        const maxSize = 1400;
+        const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        const context = canvas.getContext("2d");
+        if (!context) {
+          resolve(String(reader.result ?? ""));
+          return;
+        }
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.78));
+      };
+      image.onerror = () => resolve(String(reader.result ?? ""));
+      image.src = String(reader.result ?? "");
+    };
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
@@ -47,13 +65,21 @@ function ProofContent() {
   const proofRows = data.proof.filter((item) => item.industry === data.profile.industry);
   const industry = industries[data.profile.industry];
   const activeProof = proofRows[0];
-  const proofMessage = useMemo(() => {
-    if (!activeProof) return "Add a before/after proof item, then copy a short client-ready message from here.";
+  function makeProofMessage(item: ProofItem | undefined) {
+    if (!item) return "Add a before/after proof item, then copy a short client-ready message from here.";
     if (data.profile.language === "es") {
-      return `Aquí tiene un antes y después de ${activeProof.service || "un trabajo reciente"}${activeProof.clientName ? ` para ${activeProof.clientName}` : ""}. ${activeProof.outcome || "Esto muestra el tipo de resultado que buscamos entregar."} ¿Quiere que le mande una cotización o el próximo horario disponible?`;
+      return `Aquí tiene un antes y después de ${item.service || "un trabajo reciente"}${item.clientName ? ` para ${item.clientName}` : ""}. ${item.outcome || "Esto muestra el tipo de resultado que buscamos entregar."} ¿Quiere que le mande una cotización o el próximo horario disponible?`;
     }
-    return `Here is a quick before-and-after from ${activeProof.service || "a recent job"}${activeProof.clientName ? ` for ${activeProof.clientName}` : ""}. ${activeProof.outcome || "This shows the kind of result we aim to deliver."} Want me to send a quote or next available time?`;
-  }, [activeProof, data.profile.language]);
+    if (data.profile.language === "fr") {
+      return `Voici un avant-après de ${item.service || "un projet récent"}${item.clientName ? ` pour ${item.clientName}` : ""}. ${item.outcome || "Cela montre le type de résultat que nous cherchons à livrer."} Voulez-vous que je vous envoie un devis ou le prochain créneau disponible?`;
+    }
+    if (data.profile.language === "pt") {
+      return `Aqui está um antes e depois de ${item.service || "um trabalho recente"}${item.clientName ? ` para ${item.clientName}` : ""}. ${item.outcome || "Isso mostra o tipo de resultado que buscamos entregar."} Quer que eu envie uma cotação ou o próximo horário disponível?`;
+    }
+    return `Here is a quick before-and-after from ${item.service || "a recent job"}${item.clientName ? ` for ${item.clientName}` : ""}. ${item.outcome || "This shows the kind of result we aim to deliver."} Want me to send a quote or next available time?`;
+  }
+
+  const proofMessage = useMemo(() => makeProofMessage(activeProof), [activeProof, data.profile.language]);
 
   function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -79,6 +105,24 @@ function ProofContent() {
 
   function deleteProof(id: string) {
     setData((current) => ({ ...current, proof: current.proof.filter((item) => item.id !== id) }));
+  }
+
+  function proofLink(item: ProofItem) {
+    return `${window.location.origin}${window.location.pathname}?proof=${item.id}`;
+  }
+
+  function copyProofPackage(item: ProofItem) {
+    const packageText = `${makeProofMessage(item)}\n\nProof link: ${proofLink(item)}\n\nNote: photo records are stored in this OwnerOps workspace. Attach the before/after photos when sending outside the app.`;
+    navigator.clipboard?.writeText(packageText);
+  }
+
+  async function shareProof(item: ProofItem) {
+    const text = `${makeProofMessage(item)}\n${proofLink(item)}`;
+    if (navigator.share) {
+      await navigator.share({ title: item.title || "Before and after proof", text });
+    } else {
+      navigator.clipboard?.writeText(text);
+    }
   }
 
   return (
@@ -179,6 +223,12 @@ function ProofContent() {
               <div className="flex gap-2">
                 <button type="button" onClick={() => setEditing(item)} className="rounded-md border border-line bg-white px-3 py-2 text-sm font-bold">
                   Edit
+                </button>
+                <button type="button" aria-label="Copy proof package" onClick={() => copyProofPackage(item)} className="grid h-9 w-9 place-items-center rounded-md border border-line bg-white">
+                  <Link2 size={15} />
+                </button>
+                <button type="button" aria-label="Share proof" onClick={() => shareProof(item)} className="grid h-9 w-9 place-items-center rounded-md border border-line bg-white">
+                  <Share2 size={15} />
                 </button>
                 <button type="button" aria-label="Delete proof" onClick={() => deleteProof(item.id)} className="grid h-9 w-9 place-items-center rounded-md border border-line bg-white text-clay">
                   <Trash2 size={15} />

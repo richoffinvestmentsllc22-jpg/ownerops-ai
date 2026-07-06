@@ -19,7 +19,10 @@ OwnerOps AI is a SaaS MVP for small service business owners. It combines a busin
 - Construction estimator for quantity, labor, materials, overhead, contingency, and target margin
 - Operator tools for quote starters, profit checks, and pre-send trust checklists
 - Before-and-after proof library for saving project photos and copy-ready client messages
-- English and Spanish client-facing quote/proof messages
+- Image compression for saved proof photos
+- Print/PDF quote export from the estimator
+- English, Spanish, French, and Portuguese client-facing quote/proof messages
+- Account/data readiness page for Supabase login and cloud storage setup
 - Supabase SQL schema with row level security policies
 
 ## Getting Started

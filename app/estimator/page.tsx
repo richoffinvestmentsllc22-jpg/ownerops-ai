@@ -1,6 +1,6 @@
 "use client";
 
-import { Calculator, Copy, Hammer, ShieldAlert } from "lucide-react";
+import { Calculator, Copy, FileDown, Hammer, ShieldAlert } from "lucide-react";
 import { useMemo, useState } from "react";
 import { PageFrame } from "@/components/PageFrame";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -68,10 +68,15 @@ function EstimatorContent() {
     return { material, laborHours, labor, overhead, contingency, cost, quote, profit };
   }, [inputs]);
 
+  const quoteValue = Math.round(estimate.quote).toLocaleString();
   const quoteMessage =
     data.profile.language === "es"
-      ? `Hola {{first_name}}, para este alcance de ${trade.label.toLowerCase()}, mi precio estimado es $${Math.round(estimate.quote).toLocaleString()}. Esto incluye materiales, mano de obra, gastos generales, contingencia y margen para completar el trabajo correctamente. El siguiente paso es confirmar medidas, acceso y fecha de inicio.`
-      : `Hi {{first_name}}, for this ${trade.label.toLowerCase()} scope, my estimated price is $${Math.round(estimate.quote).toLocaleString()}. That includes materials, labor, overhead, contingency, and margin to do the job correctly. The next step is confirming measurements, access, and start date.`;
+      ? `Hola {{first_name}}, para este alcance de ${trade.label.toLowerCase()}, mi precio estimado es $${quoteValue}. Esto incluye materiales, mano de obra, gastos generales, contingencia y margen para completar el trabajo correctamente. El siguiente paso es confirmar medidas, acceso y fecha de inicio.`
+      : data.profile.language === "fr"
+        ? `Bonjour {{first_name}}, pour ce projet de ${trade.label.toLowerCase()}, mon prix estimé est de $${quoteValue}. Cela inclut les matériaux, la main-d'oeuvre, les frais généraux, la contingence et la marge pour bien faire le travail. La prochaine étape consiste à confirmer les mesures, l'accès et la date de début.`
+        : data.profile.language === "pt"
+          ? `Olá {{first_name}}, para este escopo de ${trade.label.toLowerCase()}, meu preço estimado é $${quoteValue}. Isso inclui materiais, mão de obra, despesas gerais, contingência e margem para fazer o trabalho corretamente. O próximo passo é confirmar medidas, acesso e data de início.`
+          : `Hi {{first_name}}, for this ${trade.label.toLowerCase()} scope, my estimated price is $${quoteValue}. That includes materials, labor, overhead, contingency, and margin to do the job correctly. The next step is confirming measurements, access, and start date.`;
 
   return (
     <>
@@ -168,14 +173,24 @@ function EstimatorContent() {
             <p className="mt-2 text-sm text-white/70">Projected profit: ${Math.round(estimate.profit).toLocaleString()}</p>
           </div>
           <div className="mt-4 rounded-md border border-line bg-field p-3 text-sm leading-6 text-ink/75">{quoteMessage}</div>
-          <button
-            type="button"
-            onClick={() => navigator.clipboard?.writeText(quoteMessage)}
-            className="mt-3 inline-flex items-center gap-2 rounded-md bg-moss px-3 py-2 text-sm font-bold text-white"
-          >
-            <Copy size={16} />
-            Copy client message
-          </button>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => navigator.clipboard?.writeText(quoteMessage)}
+              className="inline-flex items-center gap-2 rounded-md bg-moss px-3 py-2 text-sm font-bold text-white"
+            >
+              <Copy size={16} />
+              Copy client message
+            </button>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm font-bold"
+            >
+              <FileDown size={16} />
+              Save as PDF
+            </button>
+          </div>
         </section>
       </div>
 

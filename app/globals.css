@@ -43,3 +43,25 @@ textarea {
     @apply text-xs font-semibold uppercase tracking-[0.08em] text-ink/55;
   }
 }
+
+@media print {
+  header,
+  nav,
+  button {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .panel {
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+}

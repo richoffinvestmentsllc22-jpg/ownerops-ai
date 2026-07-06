@@ -34,7 +34,7 @@ export type BusinessProfile = {
   businessName: string;
   ownerName: string;
   industry: IndustryKey;
-  language: "en" | "es";
+  language: "en" | "es" | "fr" | "pt";
   city: string;
   state: string;
   phone: string;
