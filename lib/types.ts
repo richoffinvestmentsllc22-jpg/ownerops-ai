@@ -5,7 +5,29 @@ export type IndustryKey =
   | "nail_salons"
   | "landscaping_companies"
   | "auto_detailing_businesses"
-  | "real_estate_investors";
+  | "real_estate_investors"
+  | "tax_preparers"
+  | "heavy_truck_drivers"
+  | "hvac_services"
+  | "plumbing_services"
+  | "electrical_services"
+  | "roofing_companies"
+  | "painting_companies"
+  | "flooring_installers"
+  | "handyman_services"
+  | "appliance_repair"
+  | "pest_control"
+  | "welding_fabrication"
+  | "concrete_masonry"
+  | "moving_companies"
+  | "towing_roadside"
+  | "graphic_designers"
+  | "brand_designers"
+  | "custom_artists"
+  | "print_sign_shops"
+  | "photographers_videographers"
+  | "interior_designers"
+  | "web_designers";
 
 export type BusinessProfile = {
   id: string;

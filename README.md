@@ -15,7 +15,8 @@ OwnerOps AI is a SaaS MVP for small service business owners. It combines a busin
 - Business profile with industry pack selection
 - Dashboard with leads, open opportunities, follow-ups due, estimated revenue, and tasks due
 - CRUD screens for leads, customers, opportunities, tasks, service pricing, outreach templates, and AI prompt templates
-- Industry seed packs for general contractors, cleaning services, barbershops, nail salons, landscaping companies, auto detailing businesses, and real estate investors
+- Industry pack library for trades, trucking, tax preparers, creative/design businesses, transportation, beauty, real estate, and local services
+- Operator tools for quote starters, profit checks, and pre-send trust checklists
 - Supabase SQL schema with row level security policies
 
 ## Getting Started

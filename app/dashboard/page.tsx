@@ -1,6 +1,7 @@
 "use client";
 
-import { BadgeDollarSign, BriefcaseBusiness, CalendarClock, ClipboardList, UserRoundPlus } from "lucide-react";
+import { BadgeDollarSign, BriefcaseBusiness, CalendarClock, ClipboardList, Layers3, ShieldCheck, UserRoundPlus } from "lucide-react";
+import Link from "next/link";
 import { OwnerCoach } from "@/components/OwnerCoach";
 import { PageFrame } from "@/components/PageFrame";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -56,6 +57,43 @@ function DashboardContent() {
           </div>
         </section>
         <OwnerCoach data={data} />
+      </div>
+
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        <section className="panel p-4">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-ink text-white">
+              <Layers3 size={18} />
+            </span>
+            <div>
+              <p className="label">Industry System</p>
+              <h2 className="font-black">Use a pack built for the real business model</h2>
+              <p className="mt-2 text-sm leading-6 text-ink/65">
+                Switch between trades, trucking, tax, creative services, and local service packs. Each pack changes pricing, scripts, prompts, and coaching.
+              </p>
+              <Link href="/industries" className="mt-3 inline-flex rounded-md bg-ink px-3 py-2 text-sm font-bold text-white">
+                Manage industry pack
+              </Link>
+            </div>
+          </div>
+        </section>
+        <section className="panel p-4">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-moss text-white">
+              <ShieldCheck size={18} />
+            </span>
+            <div>
+              <p className="label">Trust Layer</p>
+              <h2 className="font-black">Price and follow up with a cleaner process</h2>
+              <p className="mt-2 text-sm leading-6 text-ink/65">
+                Use the operator tools to draft quotes, check profit margin, and confirm the details that make a small business look professional.
+              </p>
+              <Link href="/tools" className="mt-3 inline-flex rounded-md border border-line bg-white px-3 py-2 text-sm font-bold">
+                Open tools
+              </Link>
+            </div>
+          </div>
+        </section>
       </div>
     </>
   );
