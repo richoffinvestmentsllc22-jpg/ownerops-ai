@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeDollarSign, BriefcaseBusiness, CalendarClock, ClipboardList, Images, Layers3, ShieldCheck, SquarePen, UserRoundPlus } from "lucide-react";
+import { BadgeDollarSign, Bot, BriefcaseBusiness, CalendarClock, ClipboardList, Images, Layers3, LifeBuoy, ShieldCheck, SquarePen, UserRoundPlus } from "lucide-react";
 import Link from "next/link";
 import { OwnerCoach } from "@/components/OwnerCoach";
 import { PageFrame } from "@/components/PageFrame";
@@ -60,6 +60,23 @@ function DashboardContent() {
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        <section className="panel p-4">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-navy text-white">
+              <Bot size={18} />
+            </span>
+            <div>
+              <p className="label">Active Agent</p>
+              <h2 className="font-black">Ask what to do next</h2>
+              <p className="mt-2 text-sm leading-6 text-ink/65">
+                The agent reads the current workspace and gives practical next steps for leads, estimates, tasks, saving, and setup.
+              </p>
+              <Link href="/agent" className="mt-3 inline-flex rounded-md bg-ink px-3 py-2 text-sm font-bold text-white">
+                Open agent
+              </Link>
+            </div>
+          </div>
+        </section>
         <section className="panel p-4">
           <div className="flex items-start gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-ink text-white">
@@ -124,6 +141,23 @@ function DashboardContent() {
               </p>
               <Link href="/proof" className="mt-3 inline-flex rounded-md border border-line bg-white px-3 py-2 text-sm font-bold">
                 Open proof library
+              </Link>
+            </div>
+          </div>
+        </section>
+        <section className="panel p-4">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white text-ink">
+              <LifeBuoy size={18} />
+            </span>
+            <div>
+              <p className="label">Support</p>
+              <h2 className="font-black">Give testers a place to get unstuck</h2>
+              <p className="mt-2 text-sm leading-6 text-ink/65">
+                FAQ and troubleshooting explain login, saving, blank tests, voice input, industry packs, and estimates.
+              </p>
+              <Link href="/support" className="mt-3 inline-flex rounded-md border border-line bg-white px-3 py-2 text-sm font-bold">
+                Open support
               </Link>
             </div>
           </div>

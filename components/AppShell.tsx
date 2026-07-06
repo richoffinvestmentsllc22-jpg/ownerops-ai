@@ -12,6 +12,7 @@ import {
   Images,
   Layers3,
   LayoutDashboard,
+  LifeBuoy,
   Megaphone,
   Settings,
   SquarePen,
@@ -25,6 +26,7 @@ import type { OwnerOpsData } from "@/lib/types";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/agent", label: "Agent", icon: Bot },
   { href: "/leads", label: "Leads", icon: UserRoundPlus },
   { href: "/opportunities", label: "Pipeline", icon: BriefcaseBusiness },
   { href: "/tasks", label: "Tasks", icon: ClipboardList },
@@ -36,6 +38,7 @@ const navItems = [
   { href: "/proof", label: "Proof", icon: Images },
   { href: "/outreach", label: "Outreach", icon: Megaphone },
   { href: "/ai-prompts", label: "AI Prompts", icon: Bot },
+  { href: "/support", label: "Support", icon: LifeBuoy },
   { href: "/account", label: "Account", icon: Cloud },
   { href: "/settings", label: "Settings", icon: Settings }
 ] as const;
