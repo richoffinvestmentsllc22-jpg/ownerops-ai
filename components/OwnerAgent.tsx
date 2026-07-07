@@ -3,6 +3,7 @@
 import { Bot, CheckCircle2, ClipboardList, HelpCircle, Lightbulb, Send, Sparkles } from "lucide-react";
 import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
+import { goalRecommendationText, suggestedGoalTasks } from "@/lib/goal-planner";
 import { industries } from "@/lib/industry-packs";
 import { stageInfo } from "@/lib/workflow";
 import type { OwnerOpsData } from "@/lib/types";
@@ -43,6 +44,10 @@ function buildAgentAnswer(question: string, data: OwnerOpsData) {
       : "Create one task for the next action you want done today. Good examples: call a lead, send estimate, collect photos, or follow up on a proposal.";
   }
 
+  if (prompt.includes("goal") || prompt.includes("plan") || prompt.includes("personal")) {
+    return goalRecommendationText(data);
+  }
+
   return `Here is the best next step: make sure the profile is filled in, pick the right industry pack, add one lead, create one task, and try the Estimator. For ${activeIndustry}, the app will work best when records include notes, value, and a next follow-up.`;
 }
 
@@ -51,6 +56,7 @@ export function OwnerAgent({ data }: { data: OwnerOpsData }) {
   const [answer, setAnswer] = useState("");
   const activeIndustry = industries[data.profile.industry];
   const openDeals = data.opportunities.filter((opp) => !["completed", "lost"].includes(opp.stage));
+  const goalTasks = useMemo(() => suggestedGoalTasks(data), [data]);
   const today = new Date().toISOString().slice(0, 10);
   const dueTasks = data.tasks.filter((task) => task.status === "todo" && task.dueDate && task.dueDate <= today);
   const setupScore = [
@@ -82,9 +88,14 @@ export function OwnerAgent({ data }: { data: OwnerOpsData }) {
         title: "Clear today's work",
         detail: dueTasks.length ? `${dueTasks.length} task${dueTasks.length === 1 ? "" : "s"} due now.` : "No due tasks right now. Add tomorrow's follow-up before you close the app.",
         href: "/tasks"
+      },
+      {
+        title: "Follow the saved goal",
+        detail: goalTasks[0] ? goalTasks[0].title : goalRecommendationText(data),
+        href: "/dashboard"
       }
     ],
-    [activeIndustry.label, data.leads, data.profile.businessName, dueTasks.length, openDeals]
+    [activeIndustry.label, data, data.leads, data.profile.businessName, dueTasks.length, goalTasks, openDeals]
   );
 
   function askAgent(event: FormEvent<HTMLFormElement>) {
@@ -134,7 +145,7 @@ export function OwnerAgent({ data }: { data: OwnerOpsData }) {
               rows={4}
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
-              placeholder="Example: What lead should I follow up with? How should I price this job?"
+              placeholder="Example: What should I do today based on my goal? How should I price this job?"
             />
             <button type="submit" className="inline-flex items-center gap-2 rounded-md bg-ink px-3 py-2 text-sm font-bold text-white">
               <Send size={16} />

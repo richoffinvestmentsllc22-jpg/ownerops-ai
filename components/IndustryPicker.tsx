@@ -43,7 +43,7 @@ export const industryCategories: Array<{ label: string; keys: IndustryKey[] }> =
   },
   {
     label: "Local Services",
-    keys: ["tax_preparers", "real_estate_investors", "cleaning_services", "barbershops", "nail_salons"]
+    keys: ["tax_preparers", "real_estate_investors", "cleaning_services", "barbershops", "nail_salons", "food_vendors", "makeup_artists"]
   }
 ];
 

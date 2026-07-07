@@ -1,22 +1,36 @@
 "use client";
 
-import { BadgeDollarSign, Bot, BriefcaseBusiness, CalendarClock, ClipboardList, Images, Layers3, LifeBuoy, ShieldCheck, SquarePen, UserRoundPlus } from "lucide-react";
+import { BadgeDollarSign, Bot, BriefcaseBusiness, CalendarClock, ClipboardList, Goal, Images, Layers3, LifeBuoy, PlusCircle, ShieldCheck, SquarePen, UserRoundPlus } from "lucide-react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { OwnerCoach } from "@/components/OwnerCoach";
 import { PageFrame } from "@/components/PageFrame";
 import { SectionHeader } from "@/components/SectionHeader";
 import { StatCard } from "@/components/StatCard";
 import { useOwnerOps } from "@/components/DataProvider";
+import { goalSummary, suggestedGoalTasks } from "@/lib/goal-planner";
 import { stageInfo } from "@/lib/workflow";
 
 function DashboardContent() {
-  const { data } = useOwnerOps();
+  const { data, setData } = useOwnerOps();
+  const [goalMessage, setGoalMessage] = useState("");
   const today = new Date().toISOString().slice(0, 10);
   const openOpportunities = data.opportunities.filter((opp) => !["completed", "lost"].includes(opp.stage));
   const activeJobs = data.opportunities.filter((opp) => ["scheduled", "in_progress"].includes(opp.stage)).length;
   const followUpsDue = data.leads.filter((lead) => lead.nextFollowUp && lead.nextFollowUp <= today).length;
   const tasksDue = data.tasks.filter((task) => task.status === "todo" && task.dueDate && task.dueDate <= today).length;
   const estimatedRevenue = openOpportunities.reduce((sum, opp) => sum + opp.value * (opp.probability / 100), 0);
+  const summary = goalSummary(data);
+  const goalTasks = useMemo(() => suggestedGoalTasks(data), [data]);
+
+  function addGoalTasks() {
+    if (!goalTasks.length) {
+      setGoalMessage("Goal tasks are already in your task list.");
+      return;
+    }
+    setData((current) => ({ ...current, tasks: [...goalTasks, ...current.tasks] }));
+    setGoalMessage(`${goalTasks.length} personalized task${goalTasks.length === 1 ? "" : "s"} added.`);
+  }
 
   return (
     <>
@@ -32,6 +46,54 @@ function DashboardContent() {
         <StatCard label="Est. Revenue" value={`$${Math.round(estimatedRevenue).toLocaleString()}`} detail="Weighted open pipeline" icon={BadgeDollarSign} />
         <StatCard label="Tasks Due" value={String(tasksDue)} detail="Open tasks due now" icon={ClipboardList} />
       </div>
+
+      <section className="panel mt-6 p-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-3xl">
+            <div className="flex items-center gap-2">
+              <Goal size={18} className="text-moss" />
+              <p className="label">Saved Goal</p>
+            </div>
+            <h2 className="mt-2 text-xl font-black">{summary.goal}</h2>
+            <p className="mt-2 text-sm leading-6 text-ink/65">
+              OwnerOps uses this goal with the active industry pack to suggest tasks, lead moves, quote follow-ups, and workflow steps.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={addGoalTasks}
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-ink px-3 py-2 text-sm font-bold text-white"
+          >
+            <PlusCircle size={16} />
+            Add goal tasks
+          </button>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-md border border-line bg-field p-3">
+            <p className="label">Weighted Pipeline</p>
+            <p className="mt-1 text-2xl font-black">${Math.round(summary.weightedValue).toLocaleString()}</p>
+          </div>
+          <div className="rounded-md border border-line bg-field p-3">
+            <p className="label">Active Workflows</p>
+            <p className="mt-1 text-2xl font-black">{summary.activeOpportunities}</p>
+          </div>
+          <div className="rounded-md border border-line bg-field p-3">
+            <p className="label">Open Tasks</p>
+            <p className="mt-1 text-2xl font-black">{summary.openTasks}</p>
+          </div>
+        </div>
+        {goalTasks.length ? (
+          <div className="mt-4 grid gap-2 lg:grid-cols-3">
+            {goalTasks.map((task) => (
+              <div key={task.title} className="rounded-md border border-line bg-white p-3">
+                <p className="font-black">{task.title}</p>
+                <p className="mt-1 text-sm leading-6 text-ink/65">{task.notes}</p>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {goalMessage ? <p className="mt-3 text-sm font-semibold text-moss">{goalMessage}</p> : null}
+      </section>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="panel p-4">

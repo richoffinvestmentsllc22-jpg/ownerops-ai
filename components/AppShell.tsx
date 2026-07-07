@@ -22,6 +22,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { industries } from "@/lib/industry-packs";
+import { InterfaceGuide } from "@/components/InterfaceGuide";
 import type { OwnerOpsData } from "@/lib/types";
 
 const navItems = [
@@ -95,6 +96,7 @@ export function AppShell({ data, children }: { data: OwnerOpsData; children: Rea
           })}
         </nav>
       </header>
+      <InterfaceGuide data={data} pathname={pathname} />
       <main className="mx-auto max-w-7xl px-4 py-6 sm:py-8">{children}</main>
     </div>
   );

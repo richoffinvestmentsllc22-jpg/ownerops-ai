@@ -17,6 +17,14 @@ export const industries: Record<IndustryKey, { label: string; focus: string }> =
     label: "Nail Salons",
     focus: "Appointments, add-ons, bridal groups, and retention"
   },
+  food_vendors: {
+    label: "Food Vendors",
+    focus: "Pop-ups, catering requests, prep lists, event deposits, menus, and repeat bookings"
+  },
+  makeup_artists: {
+    label: "Makeup Artists",
+    focus: "Client bookings, bridal trials, deposits, kit prep, event timelines, and rebooking"
+  },
   landscaping_companies: {
     label: "Landscaping Companies",
     focus: "Seasonal packages, maintenance routes, and upsells"
@@ -132,6 +140,12 @@ const priceTuples: Array<[IndustryKey, string, number, number, string, string]> 
   ["nail_salons", "Gel manicure", 35, 70, "appointment", "Add art, chrome, or repairs separately"],
   ["nail_salons", "Full acrylic set", 55, 120, "appointment", "Price by length and design complexity"],
   ["nail_salons", "Pedicure package", 40, 95, "appointment", "Create basic, spa, and deluxe tiers"],
+  ["food_vendors", "Pop-up vendor day", 350, 1800, "event", "Track menu, prep, permits, staffing, inventory, and expected sales"],
+  ["food_vendors", "Private catering tray package", 250, 2500, "order", "Price by guest count, ingredients, prep time, delivery, and service setup"],
+  ["food_vendors", "Festival booth package", 1200, 8000, "event", "Protect margin with booth fees, staff, packaging, and sell-through goals"],
+  ["makeup_artists", "Soft glam appointment", 85, 180, "appointment", "Add travel, lashes, early call time, and skin prep separately"],
+  ["makeup_artists", "Bridal makeup package", 300, 1500, "package", "Include trial, wedding-day timeline, touch-up kit, and deposit terms"],
+  ["makeup_artists", "Photoshoot or production makeup", 150, 700, "session", "Price by looks, hours, kit fee, travel, and usage needs"],
   ["landscaping_companies", "Weekly lawn maintenance", 45, 160, "visit", "Route density protects margin"],
   ["landscaping_companies", "Mulch installation", 350, 2500, "job", "Price by yardage, bed prep, and edging"],
   ["landscaping_companies", "Seasonal cleanup", 250, 1200, "job", "Bundle leaf removal, pruning, and haul-away"],

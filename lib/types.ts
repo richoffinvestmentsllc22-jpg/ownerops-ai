@@ -3,6 +3,8 @@ export type IndustryKey =
   | "cleaning_services"
   | "barbershops"
   | "nail_salons"
+  | "food_vendors"
+  | "makeup_artists"
   | "landscaping_companies"
   | "auto_detailing_businesses"
   | "real_estate_investors"
