@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="OwnerOps AI">
+  <rect width="64" height="64" rx="10" fill="#17212b"/>
+  <circle cx="49" cy="15" r="5" fill="#d4a52f"/>
+  <path fill="#ffffff" d="M16 21.5c0-6.1 4.4-10.2 10.5-10.2S37 15.4 37 21.5v21c0 6.1-4.4 10.2-10.5 10.2S16 48.6 16 42.5v-21Zm7.5 20.7c0 2.4 1.2 3.8 3 3.8s3-1.4 3-3.8V21.8c0-2.4-1.2-3.8-3-3.8s-3 1.4-3 3.8v20.4Zm18.2 9.8V12h6.8v40h-6.8Z"/>
+</svg>
