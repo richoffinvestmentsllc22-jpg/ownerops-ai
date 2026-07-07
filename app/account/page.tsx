@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Cloud, Database, LogOut, Mail, RefreshCw, RotateCcw, ShieldCheck, Sparkles, XCircle } from "lucide-react";
+import { CheckCircle2, Cloud, Copy, Database, LogOut, Mail, RefreshCw, RotateCcw, ShieldCheck, Sparkles, XCircle } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { PageFrame } from "@/components/PageFrame";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -22,6 +22,7 @@ function AccountContent() {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [message, setMessage] = useState("");
+  const [testerMessage, setTesterMessage] = useState("");
 
   async function sendMagicLink(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -55,6 +56,17 @@ function AccountContent() {
       type: "email"
     });
     setMessage(error ? error.message : "Signed in. Your workspace will sync to the cloud.");
+  }
+
+  function testerLink(mode: "blank" | "demo") {
+    if (typeof window === "undefined") return "";
+    return `${window.location.origin}/dashboard?tester=${mode}`;
+  }
+
+  async function copyTesterLink(mode: "blank" | "demo") {
+    const link = testerLink(mode);
+    await navigator.clipboard?.writeText(link);
+    setTesterMessage(mode === "blank" ? "Clean tester link copied." : "Sample-data tester link copied.");
   }
 
   return (
@@ -158,7 +170,27 @@ function AccountContent() {
               <RotateCcw size={16} />
               Sample data
             </button>
+            <button
+              type="button"
+              onClick={() => copyTesterLink("blank")}
+              className="inline-flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm font-bold"
+            >
+              <Copy size={16} />
+              Copy clean link
+            </button>
+            <button
+              type="button"
+              onClick={() => copyTesterLink("demo")}
+              className="inline-flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm font-bold"
+            >
+              <Copy size={16} />
+              Copy sample link
+            </button>
           </div>
+          <p className="mt-3 text-sm leading-6 text-ink/65">
+            Clean link starts the tester with empty fields. Sample link starts them with demo data so they can click around faster.
+          </p>
+          {testerMessage ? <p className="mt-2 text-sm font-semibold text-moss">{testerMessage}</p> : null}
         </section>
         <section className="panel p-4">
           <Cloud size={20} />

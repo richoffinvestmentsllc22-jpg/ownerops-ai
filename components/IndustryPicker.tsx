@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { CheckCircle2, Search } from "lucide-react";
+import { CheckCircle2, Search, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { industries } from "@/lib/industry-packs";
 import type { IndustryKey } from "@/lib/types";
@@ -47,6 +47,8 @@ export const industryCategories: Array<{ label: string; keys: IndustryKey[] }> =
   }
 ];
 
+const recommendedIndustries: IndustryKey[] = ["general_contractors", "food_vendors", "makeup_artists", "cleaning_services", "barbershops", "brand_designers"];
+
 export function IndustryPicker({
   activeIndustry,
   onSelect,
@@ -74,6 +76,30 @@ export function IndustryPicker({
 
   return (
     <div className="space-y-3">
+      <div className="rounded-md border border-line bg-field p-3">
+        <div className="mb-2 flex items-center gap-2">
+          <Sparkles size={16} className="text-gold" />
+          <p className="label">Fast picks</p>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {recommendedIndustries.map((key) => {
+            const active = activeIndustry === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => onSelect(key)}
+                className={clsx(
+                  "shrink-0 rounded-md border px-3 py-2 text-sm font-bold transition",
+                  active ? "border-moss bg-moss text-white" : "border-line bg-white hover:border-sky"
+                )}
+              >
+                {industries[key].label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex max-w-xl items-center gap-2 rounded-md border border-line bg-white px-3 py-2">
           <Search size={16} className="text-ink/45" />
@@ -102,6 +128,11 @@ export function IndustryPicker({
       </div>
 
       <div className={clsx("grid gap-3", compact ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3")}>
+        {visibleIndustries.length === 0 ? (
+          <div className="rounded-md border border-line bg-white p-4 text-sm leading-6 text-ink/65 sm:col-span-2 lg:col-span-3">
+            No industry packs match that search yet. Try a broader word like “food,” “beauty,” “trade,” “design,” or “cleaning.”
+          </div>
+        ) : null}
         {visibleIndustries.map((key) => {
           const pack = industries[key];
           const active = activeIndustry === key;

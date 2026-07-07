@@ -159,7 +159,81 @@ export function CrudManager<T extends { id: string }>({
         {visibleRows.length === 0 ? (
           <p className="p-5 text-sm text-ink/60">{emptyState}</p>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="grid gap-3 p-3 md:hidden">
+            {visibleRows.map((row) => {
+              const titleField = fields[0];
+              const detailFields = fields.slice(1, 5);
+              return (
+                <article key={row.id} className="rounded-md border border-line bg-white p-3 shadow-soft">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="label">{titleField.label}</p>
+                      <h3 className="mt-1 line-clamp-2 font-black">
+                        {titleField.format ? titleField.format(row[titleField.key], row) : String(row[titleField.key] ?? "")}
+                      </h3>
+                    </div>
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        type="button"
+                        aria-label="Edit"
+                        onClick={() => {
+                          setPendingDeleteId(null);
+                          setFormError("");
+                          setEditing(row);
+                        }}
+                        className="grid h-9 w-9 place-items-center rounded-md border border-line bg-field"
+                      >
+                        <Edit3 size={15} />
+                      </button>
+                      {pendingDeleteId === row.id ? null : (
+                        <button
+                          type="button"
+                          aria-label="Delete"
+                          onClick={() => setPendingDeleteId(row.id)}
+                          className="grid h-9 w-9 place-items-center rounded-md border border-line bg-field text-clay"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-3 grid gap-2">
+                    {detailFields.map((field) => (
+                      <div key={String(field.key)} className="rounded-md border border-line bg-field p-2">
+                        <p className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-ink/45">{field.label}</p>
+                        <p className="mt-1 line-clamp-3 text-sm leading-5 text-ink/75">
+                          {field.format ? field.format(row[field.key], row) : String(row[field.key] ?? "") || "Not set"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  {pendingDeleteId === row.id ? (
+                    <div className="mt-3 rounded-md border border-clay/25 bg-clay/10 p-3">
+                      <p className="text-sm font-bold text-clay">Delete this record?</p>
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => confirmDelete(row)}
+                          className="rounded-md bg-clay px-3 py-2 text-xs font-black text-white"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPendingDeleteId(null)}
+                          className="rounded-md border border-line bg-white px-3 py-2 text-xs font-black"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </article>
+              );
+            })}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[760px] border-collapse text-left text-sm">
               <thead className="border-b border-line bg-ink text-white">
                 <tr>
@@ -229,6 +303,7 @@ export function CrudManager<T extends { id: string }>({
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
     </div>

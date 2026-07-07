@@ -4,6 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { hydrateOwnerOpsData, loadOwnerOpsData, saveOwnerOpsData } from "@/lib/storage";
+import { blankData } from "@/lib/blank-data";
 import { demoData } from "@/lib/demo-data";
 import type { OwnerOpsData } from "@/lib/types";
 
@@ -83,6 +84,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
+    const url = new URL(window.location.href);
+    const testerMode = url.searchParams.get("tester") ?? url.searchParams.get("mode");
+    if (testerMode === "blank" || testerMode === "demo") {
+      const nextData = testerMode === "blank" ? blankData : demoData;
+      saveOwnerOpsData(nextData);
+      applyingExternalUpdate.current = true;
+      setData(nextData);
+      url.searchParams.delete("tester");
+      url.searchParams.delete("mode");
+      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+      setStorageReady(true);
+      return;
+    }
     applyingExternalUpdate.current = true;
     setData(loadOwnerOpsData());
     setStorageReady(true);

@@ -1,6 +1,22 @@
 "use client";
 
-import { BadgeDollarSign, Bot, BriefcaseBusiness, CalendarClock, ClipboardList, Goal, Images, Layers3, LifeBuoy, PlusCircle, ShieldCheck, SquarePen, UserRoundPlus } from "lucide-react";
+import {
+  BadgeDollarSign,
+  Bot,
+  BriefcaseBusiness,
+  CalendarClock,
+  CheckCircle2,
+  ClipboardList,
+  Goal,
+  Images,
+  Layers3,
+  LifeBuoy,
+  PlusCircle,
+  Settings,
+  ShieldCheck,
+  SquarePen,
+  UserRoundPlus
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { OwnerCoach } from "@/components/OwnerCoach";
@@ -12,7 +28,7 @@ import { goalSummary, suggestedGoalTasks } from "@/lib/goal-planner";
 import { stageInfo } from "@/lib/workflow";
 
 function DashboardContent() {
-  const { data, setData } = useOwnerOps();
+  const { data, setData, session } = useOwnerOps();
   const [goalMessage, setGoalMessage] = useState("");
   const today = new Date().toISOString().slice(0, 10);
   const openOpportunities = data.opportunities.filter((opp) => !["completed", "lost"].includes(opp.stage));
@@ -22,6 +38,45 @@ function DashboardContent() {
   const estimatedRevenue = openOpportunities.reduce((sum, opp) => sum + opp.value * (opp.probability / 100), 0);
   const summary = goalSummary(data);
   const goalTasks = useMemo(() => suggestedGoalTasks(data), [data]);
+  const setupSteps = [
+    {
+      title: "Business profile",
+      detail: data.profile.businessName && data.profile.ownerName ? `${data.profile.businessName} is ready.` : "Add business and owner name.",
+      complete: Boolean(data.profile.businessName && data.profile.ownerName),
+      href: "/settings"
+    },
+    {
+      title: "Industry pack",
+      detail: "Pricing, scripts, prompts, and guidance use this pack.",
+      complete: Boolean(data.profile.industry),
+      href: "/industries"
+    },
+    {
+      title: "Saved goal",
+      detail: data.profile.goal ? "Goal is powering suggested tasks." : "Add one clear owner goal.",
+      complete: Boolean(data.profile.goal),
+      href: "/settings"
+    },
+    {
+      title: "First lead",
+      detail: data.leads.length ? `${data.leads.length} lead${data.leads.length === 1 ? "" : "s"} captured.` : "Add a real or test lead.",
+      complete: data.leads.length > 0,
+      href: "/leads"
+    },
+    {
+      title: "Pipeline flow",
+      detail: openOpportunities.length ? `${openOpportunities.length} active workflow${openOpportunities.length === 1 ? "" : "s"}.` : "Move a serious lead into Pipeline.",
+      complete: openOpportunities.length > 0,
+      href: "/opportunities"
+    },
+    {
+      title: "Cloud account",
+      detail: session ? "Cloud account is signed in." : "Use Account before charging real users.",
+      complete: Boolean(session),
+      href: "/account"
+    }
+  ];
+  const completedSetup = setupSteps.filter((step) => step.complete).length;
 
   function addGoalTasks() {
     if (!goalTasks.length) {
@@ -46,6 +101,35 @@ function DashboardContent() {
         <StatCard label="Est. Revenue" value={`$${Math.round(estimatedRevenue).toLocaleString()}`} detail="Weighted open pipeline" icon={BadgeDollarSign} />
         <StatCard label="Tasks Due" value={String(tasksDue)} detail="Open tasks due now" icon={ClipboardList} />
       </div>
+
+      <section className="panel mt-6 p-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Settings size={18} className="text-sky" />
+              <p className="label">Setup Guide</p>
+            </div>
+            <h2 className="mt-1 text-xl font-black">{completedSetup}/{setupSteps.length} launch basics complete</h2>
+            <p className="mt-2 text-sm leading-6 text-ink/65">
+              Use this checklist to turn the app from a demo into a clean tester experience.
+            </p>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-line lg:w-64">
+            <div className="h-full bg-sky" style={{ width: `${(completedSetup / setupSteps.length) * 100}%` }} />
+          </div>
+        </div>
+        <div className="mt-4 grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+          {setupSteps.map((step) => (
+            <Link key={step.title} href={step.href} className="rounded-md border border-line bg-field p-3 transition hover:border-sky hover:bg-white">
+              <span className="flex items-center gap-2 font-black">
+                <CheckCircle2 size={16} className={step.complete ? "text-moss" : "text-ink/25"} />
+                {step.title}
+              </span>
+              <span className="mt-1 block text-sm leading-6 text-ink/65">{step.detail}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <section className="panel mt-6 p-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
