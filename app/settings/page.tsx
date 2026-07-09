@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCcw, Save, Sparkles } from "lucide-react";
+import { CheckCircle2, RotateCcw, Save, Sparkles } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { IndustryPicker } from "@/components/IndustryPicker";
 import { PageFrame } from "@/components/PageFrame";
@@ -12,11 +12,14 @@ import { demoData } from "@/lib/demo-data";
 import type { BusinessProfile, IndustryKey } from "@/lib/types";
 
 function SettingsContent() {
-  const { data, setData, syncNow } = useOwnerOps();
-  const [saveMessage, setSaveMessage] = useState("Changes save in this browser automatically.");
+  const { data, setData, syncNow, session } = useOwnerOps();
+  const [saveMessage, setSaveMessage] = useState("Browser saves changes as you type. Use Save changes to confirm and sync when signed in.");
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   function updateProfile(key: keyof BusinessProfile, value: string) {
-    setSaveMessage("Unsaved cloud changes. Browser copy is updating...");
+    setHasUnsavedChanges(true);
+    setSaveMessage("Changes are saved in this browser. Press Save changes to confirm the profile.");
     setData((current) => ({
       ...current,
       profile: {
@@ -28,13 +31,27 @@ function SettingsContent() {
 
   function resetWorkspace(nextData: typeof demoData, message: string) {
     setData(nextData);
+    setHasUnsavedChanges(false);
     setSaveMessage(message);
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await syncNow();
-    setSaveMessage("Saved. Company info is stored in this browser and synced to cloud when signed in.");
+    setIsSaving(true);
+    try {
+      await syncNow();
+      setHasUnsavedChanges(false);
+      const time = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      setSaveMessage(
+        session
+          ? `Saved at ${time}. Company info is stored in this browser and synced to cloud.`
+          : `Saved at ${time}. Company info is stored in this browser. Sign in on Account to sync across devices.`
+      );
+    } catch {
+      setSaveMessage("Browser save is still active, but cloud sync did not finish. Try Save changes again.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -101,10 +118,14 @@ function SettingsContent() {
             <VoiceInputButton label="Owner Goal" onTranscript={(text) => updateProfile("goal", `${data.profile.goal} ${text}`.trim())} />
           </span>
         </label>
-        <div className="flex flex-wrap gap-2 sm:col-span-2">
-          <button type="submit" className="inline-flex items-center gap-2 rounded-md bg-moss px-3 py-2 text-sm font-bold text-white">
-            <Save size={16} />
-            Save changes
+        <div className="flex flex-wrap items-center gap-2 sm:col-span-2">
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="inline-flex items-center gap-2 rounded-md bg-moss px-3 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {hasUnsavedChanges ? <Save size={16} /> : <CheckCircle2 size={16} />}
+            {isSaving ? "Saving..." : hasUnsavedChanges ? "Save changes" : "Saved"}
           </button>
           <button
             type="button"
@@ -122,7 +143,7 @@ function SettingsContent() {
             <Sparkles size={16} />
             Start blank test
           </button>
-          <p className="basis-full text-sm leading-6 text-ink/65">{saveMessage}</p>
+          <p className={`basis-full text-sm leading-6 ${hasUnsavedChanges ? "font-semibold text-ink" : "text-ink/65"}`}>{saveMessage}</p>
         </div>
       </form>
 

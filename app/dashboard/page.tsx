@@ -17,7 +17,7 @@ import {
   SquarePen,
   UserRoundPlus
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { OwnerCoach } from "@/components/OwnerCoach";
 import { PageFrame } from "@/components/PageFrame";
@@ -30,6 +30,7 @@ import { stageInfo } from "@/lib/workflow";
 function DashboardContent() {
   const { data, setData, session } = useOwnerOps();
   const [goalMessage, setGoalMessage] = useState("");
+  const [goalDraft, setGoalDraft] = useState(data.profile.goal);
   const today = new Date().toISOString().slice(0, 10);
   const openOpportunities = data.opportunities.filter((opp) => !["completed", "lost"].includes(opp.stage));
   const activeJobs = data.opportunities.filter((opp) => ["scheduled", "in_progress"].includes(opp.stage)).length;
@@ -77,6 +78,8 @@ function DashboardContent() {
     }
   ];
   const completedSetup = setupSteps.filter((step) => step.complete).length;
+  const profileBasicsReady = Boolean(data.profile.businessName && data.profile.ownerName && data.profile.industry);
+  const shouldPromptForGoal = profileBasicsReady && !data.profile.goal.trim();
 
   function addGoalTasks() {
     if (!goalTasks.length) {
@@ -87,20 +90,101 @@ function DashboardContent() {
     setGoalMessage(`${goalTasks.length} personalized task${goalTasks.length === 1 ? "" : "s"} added.`);
   }
 
+  function saveGoal(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const cleanGoal = goalDraft.trim();
+    if (!cleanGoal) {
+      setGoalMessage("Enter a goal first so OwnerOps can personalize the next tasks.");
+      return;
+    }
+    setData((current) => {
+      const nextData = {
+        ...current,
+        profile: {
+          ...current.profile,
+          goal: cleanGoal
+        }
+      };
+      const nextGoalTasks = suggestedGoalTasks(nextData);
+      return {
+        ...nextData,
+        tasks: nextGoalTasks.length ? [...nextGoalTasks, ...nextData.tasks] : nextData.tasks
+      };
+    });
+    setGoalMessage("Goal saved. Personalized tasks are ready on the Tasks screen.");
+  }
+
+  function addStarterTask() {
+    const title = data.profile.goal.trim() ? `Move goal forward: ${data.profile.goal.trim().slice(0, 52)}` : "Plan today's next business move";
+    if (data.tasks.some((task) => task.title === title && task.status === "todo")) {
+      setGoalMessage("That starter task is already in your task list.");
+      return;
+    }
+    setData((current) => ({
+      ...current,
+      tasks: [
+        {
+          id: crypto.randomUUID(),
+          title,
+          dueDate: today,
+          priority: "high",
+          status: "todo",
+          notes: "Created from Dashboard. Edit this task with the exact action, client, or follow-up needed."
+        },
+        ...current.tasks
+      ]
+    }));
+    setGoalMessage("Starter task added. Open Tasks to edit the details.");
+  }
+
   return (
     <>
       <SectionHeader
         eyebrow="Command Center"
-        title={`Good morning, ${data.profile.ownerName}`}
+        title={`Good morning, ${data.profile.ownerName || "Owner"}`}
         description="A practical operating view for leads, deals, follow-ups, pricing, scripts, and the work that moves revenue today."
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard label="Leads" value={String(data.leads.length)} detail="Total active lead records" icon={UserRoundPlus} />
-        <StatCard label="Open Work" value={String(openOpportunities.length)} detail={`${activeJobs} scheduled or in progress`} icon={BriefcaseBusiness} />
-        <StatCard label="Follow-ups" value={String(followUpsDue)} detail="Lead follow-ups due" icon={CalendarClock} />
-        <StatCard label="Est. Revenue" value={`$${Math.round(estimatedRevenue).toLocaleString()}`} detail="Weighted open pipeline" icon={BadgeDollarSign} />
-        <StatCard label="Tasks Due" value={String(tasksDue)} detail="Open tasks due now" icon={ClipboardList} />
+        <StatCard label="Leads" value={String(data.leads.length)} detail="Open lead records" icon={UserRoundPlus} href="/leads" />
+        <StatCard label="Open Work" value={String(openOpportunities.length)} detail={`${activeJobs} scheduled or in progress`} icon={BriefcaseBusiness} href="/opportunities" />
+        <StatCard label="Follow-ups" value={String(followUpsDue)} detail="Lead follow-ups due" icon={CalendarClock} href="/leads" />
+        <StatCard label="Est. Revenue" value={`$${Math.round(estimatedRevenue).toLocaleString()}`} detail="Weighted open pipeline" icon={BadgeDollarSign} href="/pricing" />
+        <StatCard label="Tasks Due" value={String(tasksDue)} detail="Open tasks due now" icon={ClipboardList} href="/tasks" />
       </div>
+
+      {shouldPromptForGoal ? (
+        <section className="panel mt-6 overflow-hidden">
+          <div className="border-b border-line bg-ink p-4 text-white">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white/10">
+                <Goal size={18} />
+              </span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.08em] text-white/60">Goal needed</p>
+                <h2 className="font-black">Set the goal before the app builds the workflow</h2>
+              </div>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-white/70">
+              Your profile and industry are ready. Add one clear revenue, booking, lead, or completion goal so OwnerOps can create better tasks and guidance.
+            </p>
+          </div>
+          <form onSubmit={saveGoal} className="grid gap-3 p-4 lg:grid-cols-[1fr_auto] lg:items-end">
+            <label>
+              <span className="label mb-1 block">Owner goal</span>
+              <textarea
+                className="field"
+                rows={3}
+                value={goalDraft}
+                onChange={(event) => setGoalDraft(event.target.value)}
+                placeholder="Example: Book 10 catering events this month, reach $25k/month, or close 5 qualified jobs in 30 days."
+              />
+            </label>
+            <button type="submit" className="inline-flex justify-center rounded-md bg-moss px-4 py-2 text-sm font-black text-white">
+              Save goal
+            </button>
+          </form>
+        </section>
+      ) : null}
 
       <section className="panel mt-6 p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -128,6 +212,30 @@ function DashboardContent() {
               <span className="mt-1 block text-sm leading-6 text-ink/65">{step.detail}</span>
             </Link>
           ))}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={addStarterTask}
+            className="inline-flex items-center gap-2 rounded-md bg-ink px-3 py-2 text-sm font-bold text-white"
+          >
+            <ClipboardList size={16} />
+            Create starter task
+          </button>
+          <button
+            type="button"
+            onClick={addGoalTasks}
+            className="inline-flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm font-bold"
+          >
+            <PlusCircle size={16} />
+            Add goal tasks
+          </button>
+          <Link href="/tasks" className="inline-flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm font-bold">
+            Open tasks
+          </Link>
+          <Link href="/leads" className="inline-flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm font-bold">
+            Add lead
+          </Link>
         </div>
       </section>
 
