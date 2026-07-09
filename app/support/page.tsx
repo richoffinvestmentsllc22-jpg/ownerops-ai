@@ -1,9 +1,24 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, HelpCircle, LifeBuoy, Mail, RefreshCw, ShieldCheck } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Copy, HelpCircle, LifeBuoy, Mail, RefreshCw, Send, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { PageFrame } from "@/components/PageFrame";
 import { SectionHeader } from "@/components/SectionHeader";
+
+type TesterFeedback = {
+  id: string;
+  name: string;
+  role: string;
+  rating: string;
+  useful: string;
+  confusing: string;
+  expected: string;
+  stuck: string;
+  createdAt: string;
+};
+
+const FEEDBACK_KEY = "ownerops-tester-feedback";
 
 const faqs = [
   {
@@ -41,6 +56,70 @@ const troubleshooting = [
 ];
 
 function SupportContent() {
+  const [feedback, setFeedback] = useState<TesterFeedback[]>([]);
+  const [form, setForm] = useState({
+    name: "",
+    role: "Business owner",
+    rating: "4",
+    useful: "",
+    confusing: "",
+    expected: "",
+    stuck: ""
+  });
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    try {
+      setFeedback(JSON.parse(window.localStorage.getItem(FEEDBACK_KEY) ?? "[]") as TesterFeedback[]);
+    } catch {
+      setFeedback([]);
+    }
+  }, []);
+
+  const feedbackSummary = useMemo(
+    () =>
+      feedback
+        .map(
+          (item, index) =>
+            `${index + 1}. ${item.name || "Anonymous"} (${item.role}) - ${item.rating}/5\nUseful: ${item.useful || "Not answered"}\nConfusing: ${item.confusing || "Not answered"}\nExpected: ${item.expected || "Not answered"}\nStuck: ${item.stuck || "Not answered"}`
+        )
+        .join("\n\n"),
+    [feedback]
+  );
+
+  function saveFeedback(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!form.useful.trim() && !form.confusing.trim() && !form.stuck.trim()) {
+      setMessage("Add at least one useful, confusing, or stuck note before saving feedback.");
+      return;
+    }
+    const nextFeedback = [
+      {
+        id: crypto.randomUUID(),
+        ...form,
+        createdAt: new Date().toISOString()
+      },
+      ...feedback
+    ];
+    setFeedback(nextFeedback);
+    window.localStorage.setItem(FEEDBACK_KEY, JSON.stringify(nextFeedback));
+    setForm({
+      name: "",
+      role: "Business owner",
+      rating: "4",
+      useful: "",
+      confusing: "",
+      expected: "",
+      stuck: ""
+    });
+    setMessage("Feedback saved in this browser. Use Copy feedback to send it back.");
+  }
+
+  async function copyFeedback() {
+    await navigator.clipboard?.writeText(feedbackSummary || "No tester feedback saved yet.");
+    setMessage("Feedback copied.");
+  }
+
   return (
     <>
       <SectionHeader
@@ -106,15 +185,85 @@ function SupportContent() {
       </section>
 
       <section className="panel mt-5 p-4">
-        <div className="flex items-start gap-3">
-          <Mail size={20} className="mt-1 text-sky" />
-          <div>
-            <h2 className="font-black">Tester feedback prompt</h2>
-            <p className="mt-2 text-sm leading-6 text-ink/65">
-              Ask testers to send back what felt confusing, what felt useful, what they expected to happen, and where they got stuck.
-            </p>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex items-start gap-3">
+            <Mail size={20} className="mt-1 text-sky" />
+            <div>
+              <p className="label">Tester feedback</p>
+              <h2 className="font-black">Collect what confused testers</h2>
+              <p className="mt-2 text-sm leading-6 text-ink/65">
+                Save tester notes here, then copy the summary when you are ready to review patterns.
+              </p>
+            </div>
           </div>
+          <button type="button" onClick={copyFeedback} className="inline-flex items-center justify-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm font-bold">
+            <Copy size={16} />
+            Copy feedback
+          </button>
         </div>
+        <form onSubmit={saveFeedback} className="mt-4 grid gap-3 lg:grid-cols-2">
+          <label>
+            <span className="label mb-1 block">Tester name</span>
+            <input className="field" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Optional" />
+          </label>
+          <label>
+            <span className="label mb-1 block">Tester type</span>
+            <select className="field" value={form.role} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))}>
+              <option>Business owner</option>
+              <option>Friend or family</option>
+              <option>Contractor</option>
+              <option>Food vendor</option>
+              <option>Makeup artist</option>
+              <option>Other tester</option>
+            </select>
+          </label>
+          <label>
+            <span className="label mb-1 block">Overall rating</span>
+            <select className="field" value={form.rating} onChange={(event) => setForm((current) => ({ ...current, rating: event.target.value }))}>
+              <option value="5">5 - ready to keep testing</option>
+              <option value="4">4 - useful with small fixes</option>
+              <option value="3">3 - promising but confusing</option>
+              <option value="2">2 - hard to use</option>
+              <option value="1">1 - not useful yet</option>
+            </select>
+          </label>
+          <label>
+            <span className="label mb-1 block">What felt useful?</span>
+            <textarea className="field" rows={3} value={form.useful} onChange={(event) => setForm((current) => ({ ...current, useful: event.target.value }))} />
+          </label>
+          <label>
+            <span className="label mb-1 block">What felt confusing?</span>
+            <textarea className="field" rows={3} value={form.confusing} onChange={(event) => setForm((current) => ({ ...current, confusing: event.target.value }))} />
+          </label>
+          <label>
+            <span className="label mb-1 block">What did you expect to happen?</span>
+            <textarea className="field" rows={3} value={form.expected} onChange={(event) => setForm((current) => ({ ...current, expected: event.target.value }))} />
+          </label>
+          <label className="lg:col-span-2">
+            <span className="label mb-1 block">Where did you get stuck?</span>
+            <textarea className="field" rows={3} value={form.stuck} onChange={(event) => setForm((current) => ({ ...current, stuck: event.target.value }))} />
+          </label>
+          <div className="flex flex-wrap items-center gap-2 lg:col-span-2">
+            <button type="submit" className="inline-flex items-center gap-2 rounded-md bg-ink px-3 py-2 text-sm font-bold text-white">
+              <Send size={16} />
+              Save feedback
+            </button>
+            <p className="text-sm leading-6 text-ink/65">{message || `${feedback.length} feedback note${feedback.length === 1 ? "" : "s"} saved in this browser.`}</p>
+          </div>
+        </form>
+        {feedback.length ? (
+          <div className="mt-4 grid gap-2">
+            {feedback.slice(0, 3).map((item) => (
+              <article key={item.id} className="rounded-md border border-line bg-field p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-black">{item.name || "Anonymous tester"}</p>
+                  <p className="text-sm font-bold text-moss">{item.rating}/5</p>
+                </div>
+                <p className="mt-1 text-sm leading-6 text-ink/65">{item.confusing || item.useful || item.stuck}</p>
+              </article>
+            ))}
+          </div>
+        ) : null}
       </section>
     </>
   );

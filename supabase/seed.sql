@@ -17,3 +17,9 @@ insert into public.opportunities (user_id, business_profile_id, title, stage, va
 insert into public.tasks (user_id, business_profile_id, title, due_date, priority, status, notes) values
 (:user_id, :business_profile_id, 'Call new website lead', current_date, 'high', 'todo', 'Ask budget and timeline'),
 (:user_id, :business_profile_id, 'Send follow-up script to old quote', current_date + interval '1 day', 'medium', 'todo', 'Use polite urgency template');
+
+insert into public.proof_items (user_id, business_profile_id, title, client_name, service, industry, outcome, notes) values
+(:user_id, :business_profile_id, 'Move-out clean transformation', 'Northside Property Group', 'Move-out clean', :industry, 'Turned a rough rental turnover into a show-ready unit before the weekend leasing window.', 'Add real before and after images when available.');
+
+insert into public.tester_feedback (user_id, business_profile_id, tester_name, tester_role, rating, useful, confusing, expected, stuck) values
+(:user_id, :business_profile_id, 'Sample Tester', 'Business owner', 4, 'Dashboard and goal tasks made the app feel useful.', 'Cloud account setup still needs clearer final steps.', 'Expected the app to guide me after selecting industry.', 'Was not sure whether browser storage meant real saved account.');

@@ -5,6 +5,8 @@ create type public.ownerops_industry as enum (
   'cleaning_services',
   'barbershops',
   'nail_salons',
+  'food_vendors',
+  'makeup_artists',
   'landscaping_companies',
   'auto_detailing_businesses',
   'real_estate_investors',
@@ -33,7 +35,7 @@ create type public.ownerops_industry as enum (
 );
 
 create type public.lead_status as enum ('new', 'contacted', 'qualified', 'lost', 'won');
-create type public.opportunity_stage as enum ('lead', 'estimate', 'proposal', 'negotiation', 'won', 'lost');
+create type public.opportunity_stage as enum ('lead', 'estimate', 'proposal', 'negotiation', 'won', 'scheduled', 'in_progress', 'completed', 'lost');
 create type public.task_status as enum ('todo', 'done');
 create type public.task_priority as enum ('low', 'medium', 'high');
 
@@ -85,6 +87,7 @@ create table public.opportunities (
   business_profile_id uuid references public.business_profiles(id) on delete cascade,
   customer_id uuid references public.customers(id) on delete set null,
   lead_id uuid references public.leads(id) on delete set null,
+  source_lead_id uuid references public.leads(id) on delete set null,
   title text not null,
   stage public.opportunity_stage not null default 'lead',
   value numeric(12,2) not null default 0,
@@ -143,6 +146,35 @@ create table public.ai_prompt_templates (
   created_at timestamptz not null default now()
 );
 
+create table public.proof_items (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  business_profile_id uuid references public.business_profiles(id) on delete cascade,
+  title text not null,
+  client_name text,
+  service text,
+  industry public.ownerops_industry not null,
+  before_image text,
+  after_image text,
+  outcome text,
+  notes text,
+  created_at timestamptz not null default now()
+);
+
+create table public.tester_feedback (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  business_profile_id uuid references public.business_profiles(id) on delete cascade,
+  tester_name text,
+  tester_role text,
+  rating integer check (rating between 1 and 5),
+  useful text,
+  confusing text,
+  expected text,
+  stuck text,
+  created_at timestamptz not null default now()
+);
+
 create table public.ownerops_data_snapshots (
   user_id uuid primary key references auth.users(id) on delete cascade,
   data jsonb not null,
@@ -157,6 +189,8 @@ alter table public.tasks enable row level security;
 alter table public.service_pricing enable row level security;
 alter table public.outreach_templates enable row level security;
 alter table public.ai_prompt_templates enable row level security;
+alter table public.proof_items enable row level security;
+alter table public.tester_feedback enable row level security;
 alter table public.ownerops_data_snapshots enable row level security;
 
 create policy "Users manage own profiles" on public.business_profiles
@@ -174,6 +208,10 @@ create policy "Users manage own pricing" on public.service_pricing
 create policy "Users manage own outreach" on public.outreach_templates
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "Users manage own prompts" on public.ai_prompt_templates
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own proof" on public.proof_items
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own tester feedback" on public.tester_feedback
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "Users manage own data snapshots" on public.ownerops_data_snapshots
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);

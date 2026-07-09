@@ -200,14 +200,16 @@ export function HelpBot({ data, pathname }: { data: OwnerOpsData; pathname: stri
   const [tourStep, setTourStep] = useState(0);
   const activeIndustry = industries[data.profile.industry];
   const currentGuide = pageGuides[pathname] ?? pageGuides["/dashboard"];
+  const onboardingIncomplete = !data.profile.businessName || !data.profile.ownerName || !data.profile.goal || data.leads.length === 0;
 
   useEffect(() => {
+    if (onboardingIncomplete) return;
     const hasSeenBot = window.localStorage.getItem("ownerops-helpbot-seen");
     if (!hasSeenBot) {
       setOpen(true);
       window.localStorage.setItem("ownerops-helpbot-seen", "1");
     }
-  }, []);
+  }, [onboardingIncomplete]);
 
   const personalTip = useMemo(() => {
     const openDeal = firstOpenDeal(data);

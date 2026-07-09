@@ -24,6 +24,7 @@ import { usePathname } from "next/navigation";
 import { industries } from "@/lib/industry-packs";
 import { HelpBot } from "@/components/HelpBot";
 import { InterfaceGuide } from "@/components/InterfaceGuide";
+import { OnboardingWizard } from "@/components/OnboardingWizard";
 import type { OwnerOpsData } from "@/lib/types";
 
 const navItems = [
@@ -99,6 +100,7 @@ export function AppShell({ data, children }: { data: OwnerOpsData; children: Rea
       </header>
       <InterfaceGuide data={data} pathname={pathname} />
       <main className="mx-auto max-w-7xl px-4 py-6 sm:py-8">{children}</main>
+      <OnboardingWizard data={data} pathname={pathname} />
       <HelpBot data={data} pathname={pathname} />
     </div>
   );
